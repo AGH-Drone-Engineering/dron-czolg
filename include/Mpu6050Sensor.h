@@ -14,6 +14,7 @@ public:
 
     float getPitch() const { return pitch_filtered; }
     float getRoll() const { return roll_filtered; }
+    float getYaw() const { return yaw_gyro; }
     sensors_event_t getAccelEvent() const { return a; }
     sensors_event_t getGyroEvent() const { return g; }
     sensors_event_t getTempEvent() const { return temp; }
@@ -24,7 +25,7 @@ private:
     unsigned long last_time = 0;
     float alpha = 0.98; // Complementary filter coefficient
     float pitch_acc, roll_acc;
-    float pitch_gyro = 0, roll_gyro = 0;
+    float pitch_gyro = 0, roll_gyro = 0, yaw_gyro = 0;
     float pitch_filtered = 0, roll_filtered = 0;
 };
 
