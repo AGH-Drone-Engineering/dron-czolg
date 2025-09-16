@@ -19,9 +19,9 @@ public:
     sensors_event_t getTempEvent() const { return temp; }
 private:
     Adafruit_MPU6050 mpu;
+    sensors_event_t a, g, temp;
     void configure();
     float pitch_acc, roll_acc;
-    sensors_event_t a, g, temp;
 };
 
 #endif // MPU6050SENSOR_H
