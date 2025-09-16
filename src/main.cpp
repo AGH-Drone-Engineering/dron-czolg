@@ -71,8 +71,12 @@ void loop() {
   setTrackPWM(esc_in_val_left, esc_in_val_right);
 
   // Print PID output
-  Serial.print("PID Control: ");
-  Serial.println(pid_yaw_ctrl);
+  Serial.print("PID Control Yaw: ");
+  Serial.print(pid_yaw_ctrl);
+  Serial.print(", Roll: ");
+  Serial.print(pid_roll_ctrl);
+  Serial.print(", Pitch: ");
+  Serial.println(pid_pitch_ctrl);
 
   // Print accelerometer readings
   Serial.print("Acceleration X: ");
