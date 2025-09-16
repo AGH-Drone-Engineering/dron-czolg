@@ -1,8 +1,25 @@
 
 #include "Mpu6050Sensor.h"
 
+extern "C" {
+  #include "pid.h"
+  #include "config.h"
+  #include "motor.h"
+}
+
 Mpu6050Sensor mpuSensor;
 sensors_event_t a, g, temp;
+
+// PID
+static pid_s pid_yaw, pid_roll, pid_pitch;
+static float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;
+static float yaw_sp, throttle_sp;
+static float yaw_rate, pitch, roll;
+static float rc_throttle, rc_steer;
+static float esc_in_val_left;
+static float esc_in_val_right;
+
+unsigned long dt;
 
 void setup(void) {
   Serial.begin(115200);
@@ -19,6 +36,10 @@ void setup(void) {
   Serial.println("MPU6050 Found!");
   Serial.println("");
   delay(100);
+
+  pid_init(&pid_yaw, 1, 0.01, 1, -100, 100);
+  pid_init(&pid_roll, 1, 0.01, 1, -100, 100);
+  pid_init(&pid_pitch, 1, 0.01, 1, -100, 100);
 }
 
 void loop() {
@@ -29,6 +50,29 @@ void loop() {
   sensors_event_t a = mpuSensor.getAccelEvent();
   sensors_event_t g = mpuSensor.getGyroEvent();
   sensors_event_t temp = mpuSensor.getTempEvent();
+
+  // Update setpoints (from radio RX) TODO
+  rc_throttle = 0;  // forward/back
+  rc_steer = 0;     // left/right
+  yaw_sp = rc_steer * STEER_COEF;
+  throttle_sp = rc_throttle * THROTTLE_COEF;
+
+  // PID Update
+  yaw_rate = mpuSensor.getYawRate();
+  pid_yaw_ctrl = pid_compute(&pid_yaw, yaw_rate, yaw_sp, dt);
+  roll = mpuSensor.getRoll();
+  pid_roll_ctrl = pid_compute(&pid_roll, roll, 0, dt);
+  pitch = mpuSensor.getPitch();
+  pid_pitch_ctrl = pid_compute(&pid_pitch, pitch, 0, dt);
+
+  // Motor control
+  esc_in_val_left = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
+  esc_in_val_right = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
+  setTrackPWM(esc_in_val_left, esc_in_val_right);
+
+  // Print PID output
+  Serial.print("PID Control: ");
+  Serial.println(pid_yaw_ctrl);
 
   // Print accelerometer readings
   Serial.print("Acceleration X: ");
@@ -64,5 +108,5 @@ void loop() {
   Serial.println(mpuSensor.getYawRate());
 
   Serial.println("");
-  delay(20);
+  delay(LOOP_DT);
 }
