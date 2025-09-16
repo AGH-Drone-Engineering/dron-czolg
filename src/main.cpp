@@ -59,5 +59,5 @@ void loop() {
   Serial.println(mpuSensor.getRoll());
 
   Serial.println("");
-  delay(500);
+  delay(20);
 }
