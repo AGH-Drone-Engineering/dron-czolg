@@ -59,7 +59,9 @@ void loop() {
   Serial.print(" Roll: ");
   Serial.print(mpuSensor.getRoll());
   Serial.print(" Yaw (Relative): ");
-  Serial.println(mpuSensor.getYaw());
+  Serial.print(mpuSensor.getYaw());
+  Serial.print(" Yaw Rate: ");
+  Serial.println(mpuSensor.getYawRate());
 
   Serial.println("");
   delay(20);
