@@ -53,10 +53,15 @@ void loop() {
   Serial.print(temp.temperature);
   Serial.println(" degC");
 
+  // Print orientation
   Serial.print("Pitch: ");
   Serial.print(mpuSensor.getPitch());
   Serial.print(" Roll: ");
-  Serial.println(mpuSensor.getRoll());
+  Serial.print(mpuSensor.getRoll());
+  Serial.print(" Yaw (Relative): ");
+  Serial.print(mpuSensor.getYaw());
+  Serial.print(" Yaw Rate: ");
+  Serial.println(mpuSensor.getYawRate());
 
   Serial.println("");
   delay(20);

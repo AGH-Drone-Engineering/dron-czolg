@@ -32,6 +32,7 @@ void Mpu6050Sensor::computeOrientation() {
     // Integrate gyro data
     pitch_gyro += g.gyro.x * dt;
     roll_gyro  += g.gyro.y * dt;
+    yaw_gyro  += g.gyro.z * dt;
 
     // Complementary filter
     pitch_filtered = alpha * pitch_gyro + (1 - alpha) * pitch_acc;
