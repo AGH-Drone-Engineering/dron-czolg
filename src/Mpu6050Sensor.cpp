@@ -1,5 +1,5 @@
-#include "Mpu6050Sensor.h"
 
+#include "Mpu6050Sensor.h"
 
 Mpu6050Sensor::Mpu6050Sensor() {}
 
@@ -20,7 +20,20 @@ void Mpu6050Sensor::configure() {
 
 void Mpu6050Sensor::computeOrientation() {
     mpu.getEvent(&a, &g, &temp);
+
+    unsigned long current_time = millis();
+    float dt = (current_time - last_time) / 1000.0; //ms to s
+    last_time = current_time;
+
     // Calculate pitch and roll from accelerometer
     pitch_acc = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI;
     roll_acc  = atan2(-a.acceleration.x, a.acceleration.z) * 180 / PI;
+
+    // Integrate gyro data
+    pitch_gyro += g.gyro.x * dt;
+    roll_gyro  += g.gyro.y * dt;
+
+    // Complementary filter
+    pitch_filtered = alpha * pitch_gyro + (1 - alpha) * pitch_acc;
+    roll_filtered  = alpha * roll_gyro  + (1 - alpha) * roll_acc;
 }
