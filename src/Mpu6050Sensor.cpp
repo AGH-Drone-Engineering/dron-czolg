@@ -17,6 +17,10 @@ void Mpu6050Sensor::configure() {
     mpu.setFilterBandwidth(MPU6050_BAND_5_HZ); // 260 (disabled), 184, 94, 44, 21, 10, or 5 Hz
 }
 
-void Mpu6050Sensor::read(sensors_event_t *a, sensors_event_t *g, sensors_event_t *temp) {
-    mpu.getEvent(a, g, temp);
+
+void Mpu6050Sensor::computeOrientation() {
+    mpu.getEvent(&a, &g, &temp);
+    // Calculate pitch and roll from accelerometer
+    pitch_acc = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI;
+    roll_acc  = atan2(-a.acceleration.x, a.acceleration.z) * 180 / PI;
 }
