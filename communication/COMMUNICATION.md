@@ -22,8 +22,7 @@ Useful link: https://uwarg-docs.atlassian.net/wiki/spaces/ZP/pages/2238283817/SB
 | CH9–16 | More aux functions (camera control, gimbal, custom mixes, etc.) |
 CH17 - CH18 | Digital (on/off switches). Stored in flags byte |
 
-Values:
-Value ranges:
+Channel Value Ranges:
 
 - The analog channels (ch-1 to ch-16) typically return values in the range ~ 172 to 1811.
 - With extended limits (or special configurations) you might see the full 11-bit range (0-2047).
