@@ -1,44 +1,47 @@
-#include "SBUS.h"
+#include "sbus.h"
 
-// Use Serial1 if your board has multiple UARTs (Mega, ESP32, Teensy).
-// On Uno/Nano, you'll need SoftwareSerial with an inverter circuit.
-SBUS sbus(Serial1);
-
-int16_t channels[18]; // stores up to 18 channels
-bool failsafe = false;
-bool lostFrame = false;
+/* SBUS object, reading SBUS */
+bfs::SbusRx sbus_rx(&Serial1); // Use Serial1 for SBUS input
+/* SBUS data struct */
+bfs::SbusData data;
 
 void setup()
 {
-    Serial.begin(115200); // USB Serial (for printing to PC)
-    sbus.begin();         // Start SBUS (100000 baud, 8E2)
+    // USB serial for debug printing
+    Serial.begin(115200);
+    while (!Serial)
+    {
+    }
+
+    // Start SBUS RX
+    sbus_rx.Begin();
+
     Serial.println("SBUS Reader Started");
 }
 
 void loop()
 {
-    // Try to read one SBUS frame (25 bytes)
-    if (sbus.read())
+    // Try to read a new SBUS frame
+    if (sbus_rx.Read())
     {
-        sbus.getNormalizedChannels(channels, failsafe, lostFrame);
+        // Grab the received data
+        data = sbus_rx.data();
 
         // Print all 16 channels
         Serial.print("Channels: ");
-        for (int i = 0; i < 16; i++)
+        for (int i = 0; i < data.NUM_CH; i++)
         {
             Serial.print("CH");
             Serial.print(i + 1);
             Serial.print("=");
-            Serial.print(channels[i]);
-            Serial.print("  ");
+            Serial.print(data.ch[i]);
+            Serial.print("\t");
         }
 
         // Print failsafe / lost frame flags
-        if (failsafe)
-            Serial.print("  FAILSAFE!");
-        if (lostFrame)
-            Serial.print("  LOST FRAME!");
-
-        Serial.println();
+        Serial.print("LostFrame=");
+        Serial.print(data.lost_frame);
+        Serial.print("\tFailsafe=");
+        Serial.println(data.failsafe);
     }
 }
