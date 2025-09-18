@@ -1,5 +1,6 @@
 
-#include "Mpu6050Sensor.h"
+#include "mpu6050_sensor.h"
+#include "sbus_receiver.h"
 
 extern "C" {
   #include "pid.h"
@@ -37,6 +38,10 @@ void setup(void) {
   Serial.println("");
   delay(100);
 
+  // Sbus init
+  sbus_rx.Begin();
+  Serial.println("SBUS Reader Started");
+
   pid_init(&pid_yaw, 1, 0.01, 1, -100, 100);
   pid_init(&pid_roll, 1, 0.01, 1, -100, 100);
   pid_init(&pid_pitch, 1, 0.01, 1, -100, 100);
@@ -54,6 +59,14 @@ void loop() {
   // Update setpoints (from radio RX) TODO
   rc_throttle = 0;  // forward/back
   rc_steer = 0;     // left/right
+
+  // Read SBUS data
+  if (sbus_rx.Read()) {
+    sbus_data = sbus_rx.data();
+    rc_throttle = sbus_data.ch[RC_THROTTLE_CH];
+    rc_steer = sbus_data.ch[RC_STEER_CH];
+  }
+
   yaw_sp = rc_steer * STEER_COEF;
   throttle_sp = rc_throttle * THROTTLE_COEF;
 
@@ -78,28 +91,28 @@ void loop() {
   Serial.print(", Pitch: ");
   Serial.println(pid_pitch_ctrl);
 
-  // Print accelerometer readings
-  Serial.print("Acceleration X: ");
-  Serial.print(a.acceleration.x);
-  Serial.print(", Y: ");
-  Serial.print(a.acceleration.y);
-  Serial.print(", Z: ");
-  Serial.print(a.acceleration.z);
-  Serial.println(" m/s^2");
+  // // Print accelerometer readings
+  // Serial.print("Acceleration X: ");
+  // Serial.print(a.acceleration.x);
+  // Serial.print(", Y: ");
+  // Serial.print(a.acceleration.y);
+  // Serial.print(", Z: ");
+  // Serial.print(a.acceleration.z);
+  // Serial.println(" m/s^2");
 
-  // Print gyroscope readings
-  Serial.print("Rotation X: ");
-  Serial.print(g.gyro.x);
-  Serial.print(", Y: ");
-  Serial.print(g.gyro.y);
-  Serial.print(", Z: ");
-  Serial.print(g.gyro.z);
-  Serial.println(" rad/s");
+  // // Print gyroscope readings
+  // Serial.print("Rotation X: ");
+  // Serial.print(g.gyro.x);
+  // Serial.print(", Y: ");
+  // Serial.print(g.gyro.y);
+  // Serial.print(", Z: ");
+  // Serial.print(g.gyro.z);
+  // Serial.println(" rad/s");
 
-  // Print temperature
-  Serial.print("Temperature: ");
-  Serial.print(temp.temperature);
-  Serial.println(" degC");
+  // // Print temperature
+  // Serial.print("Temperature: ");
+  // Serial.print(temp.temperature);
+  // Serial.println(" degC");
 
   // Print orientation
   Serial.print("Pitch: ");

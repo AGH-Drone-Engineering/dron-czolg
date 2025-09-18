@@ -10,3 +10,7 @@
 // RC
 #define THROTTLE_COEF 1
 #define STEER_COEF 1
+
+// SBUS channel mapping
+#define RC_THROTTLE_CH 0
+#define RC_STEER_CH 1
