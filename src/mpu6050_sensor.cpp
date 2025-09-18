@@ -1,5 +1,5 @@
 
-#include "Mpu6050Sensor.h"
+#include "mpu6050_sensor.h"
 
 Mpu6050Sensor::Mpu6050Sensor() {}
 

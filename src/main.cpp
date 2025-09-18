@@ -1,5 +1,5 @@
 
-#include "Mpu6050Sensor.h"
+#include "mpu6050_sensor.h"
 #include "sbus_receiver.h"
 
 extern "C" {
