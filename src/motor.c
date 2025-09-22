@@ -3,7 +3,7 @@
 void setMotorPWM(int pin, int value) {
 }
 
-void setTrackPWM(float left, float right) {
+void setVehiclePWM(const motors_pwm_s * motors_pwm) {
     // TODO
     // Normalize inputs
     // Set motor PWM

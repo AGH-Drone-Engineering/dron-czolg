@@ -14,6 +14,8 @@ public:
 
     float getPitch() const { return pitch_filtered; }
     float getRoll() const { return roll_filtered; }
+    float getPitchRate() const { return g.gyro.x; }
+    float getRollRate() const { return g.gyro.y; }
     float getYaw() const { return yaw_gyro; }
     float getYawRate() const { return g.gyro.z; } // Yaw rate from gyroscope
     sensors_event_t getAccelEvent() const { return a; }
