@@ -7,6 +7,10 @@ typedef struct {
   float out_min, out_max;
 } pid_s;
 
+typedef struct {
+  pid_s pid_roll, pid_pitch, pid_yaw;
+} pid3d_s;
+
 // pid_init - Initialize PID controller.
 // @param pid Pointer to a struct holding PID parameters
 // @param Kp Proportional gain
