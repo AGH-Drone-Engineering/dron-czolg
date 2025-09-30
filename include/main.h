@@ -24,4 +24,6 @@
 #define RC_ROLL_CH 3
 #define RC_MODE_CH 4 // Switch between tank and copter
 
+#define DEFAULT_MODE MODE_TANK
+
 typedef enum { MODE_TANK = 0, MODE_COPTER } vehicle_mode_t;

@@ -69,14 +69,12 @@ void setup(void) {
   sbus_rx.Begin();
   Serial.println("SBUS Reader Started");
 
-  // TODO: tune PID parameters
-  pid_init(&pid_inner.pid_yaw, 1, 0.01, 1, -100, 100);
-  pid_init(&pid_inner.pid_roll, 1, 0.01, 1, -100, 100);
-  pid_init(&pid_inner.pid_pitch, 1, 0.01, 1, -100, 100);
-
-  if (mode == MODE_COPTER) {
-    pid_init(&pid_outer.pid_pitch, 1, 0.01, 1, -100, 100);
-    pid_init(&pid_outer.pid_roll, 1, 0.01, 1, -100, 100);
+  // Default mode
+  mode = DEFAULT_MODE;
+  if (mode == MODE_TANK) {
+    changeToTank();
+  } else {
+    changeToCopter();
   }
 
   last_time_us = micros();
@@ -101,8 +99,18 @@ void loop() {
   if (sbus_rx.Read()) {
     sbus_data = sbus_rx.data();
     rc_mode_switch = sbus_data.ch[RC_MODE_CH];
+
+    // TODO: implement proper failsafe handling instead of destroying drone
+    // maybe something like if we lost signal for over a second then the
+    // failsafe starts working?
+    if (sbus_data.failsafe || sbus_data.lost_frame) {
+      setVehiclePWM(0); // Stop motors or enter safe mode
+      Serial.println("SBUS FAILSAFE or LOST FRAME!");
+      return;
+    }
   } else {
-    // No new data, skip this loop iteration
+    setVehiclePWM(0); // Stop motors or enter safe mode
+    Serial.println("No SBUS data, stopping motors!");
     return;
   }
 
