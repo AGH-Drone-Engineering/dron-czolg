@@ -22,7 +22,7 @@
 #define RC_STEER_CH 1
 #define RC_PITCH_CH 2
 #define RC_ROLL_CH 3
-#define RC_MODE_CH 4 // Switch between tank and copter
+#define RC_MODE_CH 4  // Switch between tank and copter
 
 #define DEFAULT_MODE MODE_TANK
 
