@@ -92,11 +92,6 @@ void loop() {
 
   mpuSensor.computeOrientation();
 
-  // Get sensor events using getters
-  sensors_event_t a = mpuSensor.getAccelEvent();
-  sensors_event_t g = mpuSensor.getGyroEvent();
-  sensors_event_t temp = mpuSensor.getTempEvent();
-
   yaw_rate = mpuSensor.getYawRate();
   roll = mpuSensor.getRoll();
   pitch = mpuSensor.getPitch();
@@ -181,29 +176,6 @@ void loop() {
   Serial.print(pid_roll_ctrl);
   Serial.print(", Pitch: ");
   Serial.println(pid_pitch_ctrl);
-
-  // Print accelerometer readings
-  Serial.print("Acceleration X: ");
-  Serial.print(a.acceleration.x);
-  Serial.print(", Y: ");
-  Serial.print(a.acceleration.y);
-  Serial.print(", Z: ");
-  Serial.print(a.acceleration.z);
-  Serial.println(" m/s^2");
-
-  // Print gyroscope readings
-  Serial.print("Rotation X: ");
-  Serial.print(g.gyro.x);
-  Serial.print(", Y: ");
-  Serial.print(g.gyro.y);
-  Serial.print(", Z: ");
-  Serial.print(g.gyro.z);
-  Serial.println(" rad/s");
-
-  // Print temperature
-  Serial.print("Temperature: ");
-  Serial.print(temp.temperature);
-  Serial.println(" degC");
 
   // Print orientation
   Serial.print("Pitch: ");
