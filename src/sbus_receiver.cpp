@@ -18,12 +18,16 @@ bool ReadSbus() {
 }
 
 // Normalize channel value to -1.0 to 1.0 range
+// There could be problem with bias, because values are asymmetric around center
 float NormalizeChannel(int16_t channel) {
     if (channel < 0 || channel >= bfs::SbusData::NUM_CH) {
+        Serial.println("Invalid SBUS channel: " + String(channel));
         return 0.0f;  // Safety
     }
 
     int raw_val = sbus_data.ch[channel];
+    if (raw_val < SBUS_MIN) raw_val = SBUS_MIN;
+    if (raw_val > SBUS_MAX) raw_val = SBUS_MAX;
 
     return static_cast<float>(raw_val - SBUS_CENTER) / static_cast<float>((SBUS_MAX - SBUS_MIN) / 2.0f);
 }
