@@ -22,6 +22,8 @@ bool ReadSbus() {
 // There could be a problem with bias, because values are asymmetric around center
 float NormalizeChannel(int16_t channel) {
     if (channel < 0 || channel >= bfs::SbusData::NUM_CH) {
+        Serial.print("Error: NormalizeChannel called with invalid channel index: ");
+        Serial.println(channel);
         Serial.println("Invalid SBUS channel: " + String(channel));
         return 0.0f;  // Safety
     }
