@@ -84,6 +84,13 @@ void setup(void) {
     sbus_rx.Begin();
     Serial.println("SBUS Reader Started");
 
+    pinMode(MOTOR_PIN_FL, OUTPUT);
+    pinMode(MOTOR_PIN_FR, OUTPUT);
+    pinMode(MOTOR_PIN_BL, OUTPUT);
+    pinMode(MOTOR_PIN_BR, OUTPUT);
+    pinMode(MOTOR_PIN_TL, OUTPUT);
+    pinMode(MOTOR_PIN_TR, OUTPUT);
+
     // Default mode
     mode = DEFAULT_MODE;
     if (mode == MODE_TANK) {
