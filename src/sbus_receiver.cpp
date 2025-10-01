@@ -7,6 +7,7 @@ namespace {
 constexpr int SBUS_MIN = 172;
 constexpr int SBUS_MAX = 1811;
 constexpr int SBUS_CENTER = (SBUS_MIN + SBUS_MAX) / 2;
+constexpr float SBUS_HALF_RANGE = (SBUS_MAX - SBUS_MIN) / 2.0f;
 }  // namespace
 
 bool ReadSbus() {
@@ -29,5 +30,5 @@ float NormalizeChannel(int16_t channel) {
     if (raw_val < SBUS_MIN) raw_val = SBUS_MIN;
     if (raw_val > SBUS_MAX) raw_val = SBUS_MAX;
 
-    return static_cast<float>(raw_val - SBUS_CENTER) / static_cast<float>((SBUS_MAX - SBUS_MIN) / 2.0f);
+    return (static_cast<float>(raw_val) - static_cast<float>(SBUS_CENTER)) / SBUS_HALF_RANGE;
 }
