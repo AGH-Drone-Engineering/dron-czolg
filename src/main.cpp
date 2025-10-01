@@ -29,22 +29,40 @@ void globalPidInit() {
     pid_init(&pid_inner.pid_pitch, 1, 0.01, 1, -100, 100);
 }
 
+void resetPwm() {
+    motors_pwm.bl = 0;
+    motors_pwm.br = 0;
+    motors_pwm.fl = 0;
+    motors_pwm.fr = 0;
+    motors_pwm.tl = 0;
+    motors_pwm.tr = 0;
+    setVehiclePWM(&motors_pwm);
+}
+
 void changeToCopter() {
     mode = MODE_COPTER;
     Serial.println("Switched to COPTER mode");
     globalPidInit();
     pid_init(&pid_outer.pid_pitch, 1, 0.01, 1, -100, 100);
     pid_init(&pid_outer.pid_roll, 1, 0.01, 1, -100, 100);
+    resetPwm();
 
     // TODO: Servo changing to copter position
+
+    // small delay
+    delay(1000);
 }
 
 void changeToTank() {
     mode = MODE_TANK;
     Serial.println("Switched to TANK mode");
     globalPidInit();
+    resetPwm();
 
     // TODO: Servo changing to tank position
+
+    // small delay
+    delay(1000);
 }
 
 void setup(void) {
@@ -111,11 +129,16 @@ void loop() {
 
     // Determine mode based on switch position
     if (rc_mode_switch > 1000) {
-        if (mode != MODE_COPTER) {
+        // Ensure all motors are stopped before switching modes
+        if (mode != MODE_COPTER && motors_pwm.tl <= SWITCH_MOTOR_PWM_THRESHOLD &&
+            motors_pwm.tr <= SWITCH_MOTOR_PWM_THRESHOLD) {
             changeToCopter();
         }
     } else {
-        if (mode != MODE_TANK) {
+        // Ensure all motors are stopped before switching modes
+        if (mode != MODE_TANK && motors_pwm.bl <= SWITCH_MOTOR_PWM_THRESHOLD &&
+            motors_pwm.br <= SWITCH_MOTOR_PWM_THRESHOLD && motors_pwm.tl <= SWITCH_MOTOR_PWM_THRESHOLD &&
+            motors_pwm.tr <= SWITCH_MOTOR_PWM_THRESHOLD) {
             changeToTank();
         }
     }
@@ -136,10 +159,8 @@ void loop() {
             pid_roll_ctrl = pid_compute(&pid_inner.pid_roll, roll, roll_sp, dt);
             pid_pitch_ctrl = pid_compute(&pid_inner.pid_pitch, pitch, pitch_sp, dt);
 
-            motors_pwm.fl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
-            motors_pwm.fr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
-            motors_pwm.bl = motors_pwm.fl;
-            motors_pwm.br = motors_pwm.br;
+            motors_pwm.tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
+            motors_pwm.tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
             break;
         case MODE_COPTER:
             // Read SBUS data

@@ -1,7 +1,7 @@
 #pragma once
 
 typedef struct {
-    float fl, fr, bl, br;  // front-left, ...
+    float fl, fr, bl, br, tl, tr;  // front-left, ..., tank-left, tank-right
 } motors_pwm_s;
 
 void setMotorPWM(int pin, int value);

@@ -26,4 +26,6 @@
 
 #define DEFAULT_MODE MODE_TANK
 
+#define SWITCH_MOTOR_PWM_THRESHOLD 0
+
 typedef enum { MODE_TANK = 0, MODE_COPTER } vehicle_mode_t;
