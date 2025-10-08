@@ -3,15 +3,14 @@
 #include <Arduino.h>
 
 // we would use 1 esc for 4 drone engines and 2 other controllers for tank tracks
-// motor serials are:
-#define MOTOR_SERIAL_FL &Serial1
-#define MOTOR_SERIAL_FR &Serial2
-#define MOTOR_SERIAL_BL &Serial3
-#define MOTOR_SERIAL_BR &Serial4
+// engines numbering should be:
+//     front left (FL) - 0
+//     front right (FR) - 1
+//     back left (BL) - 2
+//     back right (BR) - 3
+//     tank left (TL) - 4
+//     tank right (TR) - 5
 
-// idk how it would be connected
-// #define MOTOR_SERIAL_TL &Serial5  // Tank left motor
-// #define MOTOR_SERIAL_TR &Serial6  // Tank right motor
 
 #define ESC_INPUT_MIN 0
 #define ESC_INPUT_MAX 255

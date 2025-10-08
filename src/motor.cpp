@@ -2,6 +2,11 @@
 
 #include "DShot.h"
 
+#define MOTOR_SERIAL_FL &Serial1
+#define MOTOR_SERIAL_FR &Serial2
+#define MOTOR_SERIAL_BL &Serial3
+#define MOTOR_SERIAL_BR &Serial4
+
 DShot motor0(MOTOR_SERIAL_FL, DShotType::DShot600);
 DShot motor1(MOTOR_SERIAL_FR, DShotType::DShot600);
 DShot motor2(MOTOR_SERIAL_BL, DShotType::DShot600);
