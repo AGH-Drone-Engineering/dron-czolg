@@ -29,23 +29,13 @@ void globalPidInit() {
     pid_init(&pid_inner.pid_pitch, 1, 0.01, 1, -100, 100);
 }
 
-void resetPwm() {
-    motors_pwm.bl = 0;
-    motors_pwm.br = 0;
-    motors_pwm.fl = 0;
-    motors_pwm.fr = 0;
-    motors_pwm.tl = 0;
-    motors_pwm.tr = 0;
-    setVehiclePWM(&motors_pwm);
-}
-
 void changeToCopter() {
     mode = MODE_COPTER;
     Serial.println("Switched to COPTER mode");
     globalPidInit();
     pid_init(&pid_outer.pid_pitch, 1, 0.01, 1, -100, 100);
     pid_init(&pid_outer.pid_roll, 1, 0.01, 1, -100, 100);
-    resetPwm();
+    resetMotors();
 
     // TODO: Servo changing to copter position
 
@@ -57,7 +47,7 @@ void changeToTank() {
     mode = MODE_TANK;
     Serial.println("Switched to TANK mode");
     globalPidInit();
-    resetPwm();
+    resetMotors();
 
     // TODO: Servo changing to tank position
 
@@ -84,12 +74,12 @@ void setup(void) {
     sbus_rx.Begin();
     Serial.println("SBUS Reader Started");
 
-    pinMode(MOTOR_PIN_FL, OUTPUT);
-    pinMode(MOTOR_PIN_FR, OUTPUT);
-    pinMode(MOTOR_PIN_BL, OUTPUT);
-    pinMode(MOTOR_PIN_BR, OUTPUT);
-    pinMode(MOTOR_PIN_TL, OUTPUT);
-    pinMode(MOTOR_PIN_TR, OUTPUT);
+    // pinMode(MOTOR_PIN_FL, OUTPUT);
+    // pinMode(MOTOR_PIN_FR, OUTPUT);
+    // pinMode(MOTOR_PIN_BL, OUTPUT);
+    // pinMode(MOTOR_PIN_BR, OUTPUT);
+    // pinMode(MOTOR_PIN_TL, OUTPUT);
+    // pinMode(MOTOR_PIN_TR, OUTPUT);
 
     // Default mode
     mode = DEFAULT_MODE;
@@ -124,12 +114,12 @@ void loop() {
         // maybe something like if we lost signal for over a second then the
         // failsafe starts working?
         if (sbus_data.failsafe || sbus_data.lost_frame) {
-            setVehiclePWM(0);  // Stop motors or enter safe mode
+            setVehiclePWM(&motors_pwm, mode);  // Stop motors or enter safe mode
             Serial.println("SBUS FAILSAFE or LOST FRAME!");
             return;
         }
     } else {
-        setVehiclePWM(0);  // Stop motors or enter safe mode
+        setVehiclePWM(&motors_pwm, mode);  // Stop motors or enter safe mode
         Serial.println("No SBUS data, stopping motors!");
         return;
     }
@@ -196,7 +186,7 @@ void loop() {
             break;
     }
 
-    setVehiclePWM(&motors_pwm);
+    setVehiclePWM(&motors_pwm, mode);
 
     // Print PID output
     Serial.print("PID Control Yaw: ");
