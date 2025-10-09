@@ -1,11 +1,11 @@
 
-#include "mpu6050_sensor.h"
+#include "mpu6050Sensor.h"
 
 extern "C" {
 #include "main.h"
 #include "motor.h"
 #include "pid.h"
-#include "sbus_receiver.h"
+#include "sbusReceiver.h"
 }
 
 Mpu6050Sensor mpuSensor;

@@ -2,10 +2,10 @@
 
 ServoController::ServoController() : attached(false) {
     // Domyślne kąty odpowiadają pozycji RIDE
-    currentAngles[LEFT_FRONT]  = RIDE_LEFT_FRONT;
-    currentAngles[LEFT_REAR]   = RIDE_LEFT_REAR;
+    currentAngles[LEFT_FRONT] = RIDE_LEFT_FRONT;
+    currentAngles[LEFT_REAR] = RIDE_LEFT_REAR;
     currentAngles[RIGHT_FRONT] = RIDE_RIGHT_FRONT;
-    currentAngles[RIGHT_REAR]  = RIDE_RIGHT_REAR;
+    currentAngles[RIGHT_REAR] = RIDE_RIGHT_REAR;
 }
 
 // Odczepia serwa
@@ -49,15 +49,15 @@ void ServoController::setStablePosition(Position pos) {
     if (!attached) begin();
 
     if (pos == RIDE) {
-        setServoAngle(LEFT_FRONT,  RIDE_LEFT_FRONT);
-        setServoAngle(LEFT_REAR,   RIDE_LEFT_REAR);
+        setServoAngle(LEFT_FRONT, RIDE_LEFT_FRONT);
+        setServoAngle(LEFT_REAR, RIDE_LEFT_REAR);
         setServoAngle(RIGHT_FRONT, RIDE_RIGHT_FRONT);
-        setServoAngle(RIGHT_REAR,  RIDE_RIGHT_REAR);
-    } else if (pos == FLIGHT) { 
-        setServoAngle(LEFT_FRONT,  FLIGHT_LEFT_FRONT);
-        setServoAngle(LEFT_REAR,   FLIGHT_LEFT_REAR);
+        setServoAngle(RIGHT_REAR, RIDE_RIGHT_REAR);
+    } else if (pos == FLIGHT) {
+        setServoAngle(LEFT_FRONT, FLIGHT_LEFT_FRONT);
+        setServoAngle(LEFT_REAR, FLIGHT_LEFT_REAR);
         setServoAngle(RIGHT_FRONT, FLIGHT_RIGHT_FRONT);
-        setServoAngle(RIGHT_REAR,  FLIGHT_RIGHT_REAR);
+        setServoAngle(RIGHT_REAR, FLIGHT_RIGHT_REAR);
     }
 }
 
@@ -82,7 +82,4 @@ void ServoController::setServoAngle(Servo servo, int angleDeg) {
 }
 
 // Pobierz ostatnio ustawiony kąt danego serwa
-int ServoController::getCurrentAngle(Servo servo) const {
-    return currentAngles[servo];
-}
-
+int ServoController::getCurrentAngle(Servo servo) const { return currentAngles[servo]; }
