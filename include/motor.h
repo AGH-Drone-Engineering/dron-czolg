@@ -21,4 +21,6 @@ typedef struct {
 
 void setMotorPWM(int pin, int value);
 
-void setVehiclePWM(const motors_pwm_s* motors_pwm);
+void setVehiclePWM(const motors_pwm_s* motors_pwm, vehicle_mode_t mode);
+
+void resetMotors();
