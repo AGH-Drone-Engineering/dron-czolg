@@ -5,31 +5,38 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 
-class Mpu6050Sensor {
-   public:
-    Mpu6050Sensor();
-    bool begin();
-    void computeOrientation();  // Reads sensors and computes orientation
+class Mpu6050_Sensor
+{
 
-    float getPitch() const { return pitch_filtered; }
-    float getRoll() const { return roll_filtered; }
-    float getPitchRate() const { return g.gyro.x; }
-    float getRollRate() const { return g.gyro.y; }
-    float getYaw() const { return yaw_gyro; }
-    float getYawRate() const { return g.gyro.z; }  // Yaw rate from gyroscope
-    sensors_event_t getAccelEvent() const { return a; }
-    sensors_event_t getGyroEvent() const { return g; }
-    sensors_event_t getTempEvent() const { return temp; }
+public:
+    Mpu6050_Sensor();
+    void init();
 
-   private:
+    float get_pitch();
+    float get_pitch_rate();
+    float get_roll();
+    float get_roll_rate();
+    float get_yaw();
+    float get_yaw_rate();
+
+    sensors_event_t get_accel_event();
+    sensors_event_t get_gyro_event();
+    sensors_event_t get_temp_event();
+
+    void compute_orientation();
+    void print_data();
+
+private:
     Adafruit_MPU6050 mpu;
     sensors_event_t a, g, temp;
-    void configure();
+
     unsigned long last_time = 0;
-    float alpha = 0.98;  // Complementary filter coefficient
+    float alpha = 0.98; // Complementary filter coefficient
     float pitch_acc, roll_acc;
     float pitch_gyro = 0, roll_gyro = 0, yaw_gyro = 0;
     float pitch_filtered = 0, roll_filtered = 0;
+
+    // void configure();
 };
 
-#endif  // MPU6050SENSOR_H
+#endif // MPU6050SENSOR_H

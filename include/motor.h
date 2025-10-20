@@ -1,24 +1,35 @@
-#pragma once
+#include "config.h"
+#include "DShot.h"
+#include "pids3d.h"
+#include "mpu6050_sensor.h"
 
-#include <Arduino.h>
+class Motor_controller
+{
+public:
+    Motor_controller();
+    void init();
+    void reset_motors();
+    void update_mode(float change_to_); // determine mode based on switch position
+    // takes float from Sbus_reader.get_mode() which returns float
+    void update_motors(
+        float *sbus_data_,
+        Mpu6050_Sensor &mpu_sensor_,
+        float dt_);
 
-// we would use 1 esc for 4 drone engines and 2 other controllers for tank tracks
-// engines numbering should be:
-//     front left (FL) - 0
-//     front right (FR) - 1
-//     back left (BL) - 2
-//     back right (BR) - 3
-//     tank left (TL) - 4
-//     tank right (TR) - 5
+    void set_vehicle_PWM();
 
-
-#define ESC_INPUT_MIN 0
-#define ESC_INPUT_MAX 255
-
-typedef struct {
-    float fl, fr, bl, br, tl, tr;  // front-left, ..., tank-left, tank-right
-} motors_pwm_s;
-
-void setMotorPWM(int pin, int value);
-
-void setVehiclePWM(const motors_pwm_s* motors_pwm);
+private:
+    Pids3d pids_inner;
+    Pids3d pids_outer;
+    float fl, fr, bl, br, tl, tr; // front-left, ..., tank-left, tank-right
+    DShot motor_fl;
+    DShot motor_fr;
+    DShot motor_bl;
+    DShot motor_br;
+    DShot motor_tl;
+    DShot motor_tr;
+    vehicle_mode_t current_mode;
+    float throttle_sp, yaw_sp, roll_sp, pitch_sp;
+    float roll_desired, pitch_desired;
+    float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;
+};
