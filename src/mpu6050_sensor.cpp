@@ -23,19 +23,19 @@ void Mpu6050_Sensor::init()
 
 float Mpu6050_Sensor::get_pitch() { return pitch_filtered; }
 float Mpu6050_Sensor::get_pitch_rate() { return g.gyro.x; }
-float Mpu6050_Sensor::get_roll();
+float Mpu6050_Sensor::get_roll()
 {
     return roll_filtered;
 }
-float Mpu6050_Sensor::get_roll_rate();
+float Mpu6050_Sensor::get_roll_rate()
 {
     return g.gyro.y;
 }
-float Mpu6050_Sensor::get_yaw();
+float Mpu6050_Sensor::get_yaw()
 {
     return yaw_gyro;
 }
-float Mpu6050_Sensor::get_yaw_rate();
+float Mpu6050_Sensor::get_yaw_rate()
 {
     return g.gyro.z;
 }

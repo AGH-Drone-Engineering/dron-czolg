@@ -42,7 +42,7 @@ void loop()
     now_us = micros();
     dt = (now_us - last_time_us) / 1000000.0f;
     if (dt <= 0)
-        dt 0.001f;
+        dt = 0.001f;
     last_time_us = now_us;
 
     MPU5060_Sensor.compute_orientation();

@@ -19,8 +19,6 @@
 
 // SBUS Channel mapping
 #define SBUS_INPUT Serial1
-#define SBUS_MIN 172
-#define SBUS_MAX 1811
 #define RC_THROTTLE_CH 0
 #define RC_STEER_CH 1
 #define RC_PITCH_CH 2
@@ -37,7 +35,7 @@
 
 #define DEFAULT_MODE MODE_TANK
 
-#define SWITCH_MOTOR_PWM_TRESHOLD 0
+#define SWITCH_MOTOR_PWM_THRESHOLD 0
 
 typedef enum
 {

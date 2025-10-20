@@ -33,7 +33,7 @@ void Motor_controller::update_mode(float change_to_)
     if (change_to_ > 1000)
     {
         // Ensure all motors are stopped before switching modes
-        if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_TRESHOLD && tr <= SWITCH_MOTOR_PWM_TRESHOLD)
+        if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_THRESHOLD && tr <= SWITCH_MOTOR_PWM_THRESHOLD)
         {
             current_mode = MODE_COPTER;
             // here should be Bartek's servo I guess?
@@ -41,7 +41,7 @@ void Motor_controller::update_mode(float change_to_)
     }
     else
     {
-        if (current_mode != MODE_TANK && bl <= SWITCH_MOTOR_PWM_TRESHOLD && br <= SWITCH_MOTOR_PWM_TRESHOLD && fl <= SWITCH_MOTOR_PWM_TRESHOLD && fr <= SWITCH_MOTOR_PWM_TRESHOLD)
+        if (current_mode != MODE_TANK && bl <= SWITCH_MOTOR_PWM_THRESHOLD && br <= SWITCH_MOTOR_PWM_THRESHOLD && fl <= SWITCH_MOTOR_PWM_THRESHOLD && fr <= SWITCH_MOTOR_PWM_THRESHOLD)
         {
             current_mode = MODE_TANK;
             // again place for servo
