@@ -1,67 +1,116 @@
-#include <main.h>
-#include <motor.h>
+#include "motor.h"
 
-#include "DShot.h"
+Motor_controller::Motor_controller()
+    : motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
+      motor_fr(MOTOR_PORT_FR, DShotType::DShot600),
+      motor_bl(MOTOR_PORT_BL, DShotType::DShot600),
+      motor_br(MOTOR_PORT_BR, DShotType::DShot600),
+      motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
+      motor_tr(MOTOR_PORT_TR, DShotType::DShot600) {}
 
-#define MOTOR_SERIAL_FL &Serial1
-#define MOTOR_SERIAL_FR &Serial2
-#define MOTOR_SERIAL_BL &Serial3
-#define MOTOR_SERIAL_BR &Serial4
-#define MOTOR_SERIAL_TL &Serial5
-#define MOTOR_SERIAL_TR &Serial6
+void Motor_controller::init()
+{
+    pids_inner.init_all();
+    pids_outer.init_all();
+    Serial.println("Pids initialized");
 
-DShot motor0(MOTOR_SERIAL_FL, DShotType::DShot600);
-DShot motor1(MOTOR_SERIAL_FR, DShotType::DShot600);
-DShot motor2(MOTOR_SERIAL_BL, DShotType::DShot600);
-DShot motor3(MOTOR_SERIAL_BR, DShotType::DShot600);
-DShot motor4(MOTOR_SERIAL_TL, DShotType::DShot600);
-DShot motor5(MOTOR_SERIAL_TR, DShotType::DShot600);
-
-int ClampMotorValue(DShot& motor, int value) {
-    // Clamp value to allowed range
-    if (value < ESC_INPUT_MIN) value = ESC_INPUT_MIN;
-    if (value > ESC_INPUT_MAX) value = ESC_INPUT_MAX;
-    return value;
+    reset_motors();
+    Serial.println("Motors initialized");
 }
 
-void resetMotors() {
-    motor0.sendThrottle(0);
-    motor1.sendThrottle(0);
-    motor2.sendThrottle(0);
-    motor3.sendThrottle(0);
-    motor4.sendThrottle(0);
-    motor5.sendThrottle(0);
+void Motor_controller::reset_motors()
+{
+    motor_fl.sendThrottle(0);
+    motor_fr.sendThrottle(0);
+    motor_bl.sendThrottle(0);
+    motor_br.sendThrottle(0);
+    motor_tl.sendThrottle(0);
+    motor_tr.sendThrottle(0);
 }
 
-void ClampMotorValues(motors_pwm_s& motors_pwm, vehicle_mode_t mode) {
-    if (mode == MODE_COPTER) {
-        motors_pwm.fl = ClampMotorValue(motor0, static_cast<int>(motors_pwm.fl));
-        motors_pwm.fr = ClampMotorValue(motor1, static_cast<int>(motors_pwm.fr));
-        motors_pwm.bl = ClampMotorValue(motor2, static_cast<int>(motors_pwm.bl));
-        motors_pwm.br = ClampMotorValue(motor3, static_cast<int>(motors_pwm.br));
-        // Tank motors off
-        motors_pwm.tl = 0;
-        motors_pwm.tr = 0;
-    } else {
-        // Copter motors off
-        motors_pwm.fl = 0;
-        motors_pwm.fr = 0;
-        motors_pwm.bl = 0;
-        motors_pwm.br = 0;
-        // Tank motors on
-        motors_pwm.tl = ClampMotorValue(motor4, static_cast<int>(motors_pwm.tl));
-        motors_pwm.tr = ClampMotorValue(motor5, static_cast<int>(motors_pwm.tr));
+void Motor_controller::update_mode(float change_to_)
+{
+    if (change_to_ > 1000)
+    {
+        // Ensure all motors are stopped before switching modes
+        if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_THRESHOLD && tr <= SWITCH_MOTOR_PWM_THRESHOLD)
+        {
+            current_mode = MODE_COPTER;
+            // here should be Bartek's servo I guess?
+        }
+    }
+    else
+    {
+        if (current_mode != MODE_TANK && bl <= SWITCH_MOTOR_PWM_THRESHOLD && br <= SWITCH_MOTOR_PWM_THRESHOLD && fl <= SWITCH_MOTOR_PWM_THRESHOLD && fr <= SWITCH_MOTOR_PWM_THRESHOLD)
+        {
+            current_mode = MODE_TANK;
+            // again place for servo
+        }
     }
 }
 
-void setVehiclePWM(const motors_pwm_s* motors_pwm, vehicle_mode_t mode) {
-    if (mode == MODE_COPTER) {
-        motor0.sendThrottle(static_cast<int>(motors_pwm->fl) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
-        motor1.sendThrottle(static_cast<int>(motors_pwm->fr) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
-        motor2.sendThrottle(static_cast<int>(motors_pwm->bl) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
-        motor3.sendThrottle(static_cast<int>(motors_pwm->br) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
-    } else {
-        motor4.sendThrottle(static_cast<int>(motors_pwm->tl) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
-        motor5.sendThrottle(static_cast<int>(motors_pwm->tr) * (DSHOT_MAX_THROTTLE / ESC_INPUT_MAX));
+void Motor_controller::update_motors(
+    float *sbus_data_,
+    Pids3d &pid_inner_,
+    Pids3d &pid_outer_,
+    Mpu6050_Sensor &mpu_sensor_,
+    float dt_)
+{
+    if (current_mode == MODE_TANK)
+    {
+        throttle_sp = sbus_data_[0] * THROTTLE_COEF_TANK;
+        yaw_sp = sbus_data_[1] * STEER_COEF;
+        pitch_sp = 0.0f;
+        roll_sp = 0.0f;
+
+        pid_yaw_ctrl = pid_inner_.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
+        pid_roll_ctrl = pid_inner_.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
+        pid_pitch_ctrl = pid_inner_.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
+
+        tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
+        tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
+
+        fl = 0;
+        fr = 0;
+        bl = 0;
+        br = 0;
     }
+    else
+    {
+        throttle_sp = sbus_data_[0] * THROTTLE_COEF_COPTER;
+        yaw_sp = sbus_data_[1] * YAW_RATE_COEF;
+        pitch_sp = sbus_data_[2] * PITCH_COEF;
+        roll_sp = sbus_data_[4] * ROLL_COEF;
+
+        pid_yaw_ctrl = pid_inner_.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
+        roll_desired = pid_outer_.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
+        pitch_desired = pid_outer_.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
+        pid_roll_ctrl = pid_inner_.roll.compute(mpu_sensor_.get_roll_rate(), roll_desired, dt_);
+        pid_pitch_ctrl = pid_inner_.pitch.compute(mpu_sensor_.get_pitch_rate(), pitch_desired, dt_);
+
+        fr = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
+        fl = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl + pid_pitch_ctrl;
+        br = throttle_sp + pid_yaw_ctrl + pid_roll_ctrl - pid_pitch_ctrl;
+        bl = throttle_sp - pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
+
+        tl = 0;
+        tr = 0;
+    }
+    // Print PID output
+    Serial.print("PID Control Yaw: ");
+    Serial.print(pid_yaw_ctrl);
+    Serial.print(", Roll: ");
+    Serial.print(pid_roll_ctrl);
+    Serial.print(", Pitch: ");
+    Serial.println(pid_pitch_ctrl);
+}
+
+void Motor_controller::set_vehicle_PWM()
+{
+    motor_fl.sendThrottle(fl);
+    motor_fr.sendThrottle(fr);
+    motor_bl.sendThrottle(bl);
+    motor_br.sendThrottle(br);
+    motor_tl.sendThrottle(tl);
+    motor_tr.sendThrottle(tr);
 }
