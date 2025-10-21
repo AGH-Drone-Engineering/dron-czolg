@@ -1,5 +1,5 @@
 #include "config.h"
-#include "sbus_receiver.h"
+#include "sbus_reader.h"
 #include "mpu6050_sensor.h"
 #include "motor.h"
 #include "pids3d.h"
@@ -24,14 +24,6 @@ void setup()
     Motor_Controller.init();
 
     mode = DEFAULT_MODE;
-    if (mode == MODE_TANK)
-    {
-        // change to tank
-    }
-    else
-    {
-        // change to copter
-    }
 
     last_time_us = micros();
 }
@@ -47,15 +39,16 @@ void loop()
     MPU5060_Sensor.compute_orientation();
 
     sbus_status = SBUS_Reader.Read_Sbus();
-    // TODO handle safe mode
     switch (sbus_status)
     {
     case 2:
         Serial.println("Failsafe active");
+        Motor_Controller.safety_land();
         return;
         break;
     case 1:
         Serial.println("Signal lost");
+        Motor_Controller.safety_land();
         return;
         break;
     case 0:

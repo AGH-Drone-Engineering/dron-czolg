@@ -42,6 +42,8 @@
 
 #define SWITCH_MOTOR_PWM_THRESHOLD 0
 
+#define DSHOT_THROTTLE_ACTIVE_MIN 50
+
 typedef enum
 {
     MODE_TANK = 0,

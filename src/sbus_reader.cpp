@@ -1,4 +1,4 @@
-#include "sbus_receiver.h"
+#include "sbus_reader.h"
 
 Sbus_reader::Sbus_reader() : sbus_rx(&SBUS_INPUT) {}
 
@@ -66,15 +66,18 @@ void Sbus_reader::print_data()
     Serial.print(data[2], 2);
     Serial.print("\tRoll: ");
     Serial.println(data[3], 2);
-    Serial.print("\tMode: ");
+    Serial.print("\tArm Status: ");
     Serial.println(data[4], 2);
+    Serial.print("\tMode: ");
+    Serial.println(data[5], 2);
 }
 
 float Sbus_reader::get_throttle() { return data[0]; }
-float Sbus_reader::get_steer() { return data[1]; }
+float Sbus_reader::get_yaw() { return data[1]; }
 float Sbus_reader::get_pitch() { return data[2]; }
 float Sbus_reader::get_roll() { return data[3]; }
-float Sbus_reader::get_mode() { return data[4]; }
+float Sbus_reader::get_arm_status() { return data[4]; }
+float Sbus_reader::get_mode() { return data[5]; }
 float *Sbus_reader::get_data() { return data; }
 int Sbus_reader::get_status() { return status; }
 int Sbus_reader::Read_Sbus()
@@ -99,25 +102,3 @@ int Sbus_reader::Read_Sbus()
 
     return 1;
 }
-
-void Sbus_reader::print_data()
-{
-    Serial.print("Throttle: ");
-    Serial.print(data[0], 2);
-    Serial.print("\tSteer: ");
-    Serial.print(data[1], 2);
-    Serial.print("\tPitch: ");
-    Serial.print(data[2], 2);
-    Serial.print("\tRoll: ");
-    Serial.println(data[3], 2);
-    Serial.print("\tMode: ");
-    Serial.println(data[4], 2);
-}
-
-float Sbus_reader::get_throttle() { return data[0]; }
-float Sbus_reader::get_steer() { return data[1]; }
-float Sbus_reader::get_pitch() { return data[2]; }
-float Sbus_reader::get_roll() { return data[3]; }
-float Sbus_reader::get_mode() { return data[4]; }
-float *Sbus_reader::get_data() { return data; }
-int Sbus_reader::get_status() { return status; }

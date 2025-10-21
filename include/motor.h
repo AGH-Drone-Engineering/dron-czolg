@@ -18,6 +18,16 @@ public:
 
     void set_vehicle_PWM();
 
+    void safety_land();
+
+    void arm_motors();
+
+    void disarm_motors();
+
+    bool is_armed() { return armed; }
+
+    void set_armed(bool arm_status) { armed = arm_status; }
+
 private:
     Pids3d pids_inner;
     Pids3d pids_outer;
@@ -34,4 +44,6 @@ private:
     float throttle_sp, yaw_sp, roll_sp, pitch_sp;
     float roll_desired, pitch_desired;
     float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;
+
+    bool armed = false;
 };

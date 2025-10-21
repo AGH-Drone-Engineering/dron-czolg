@@ -127,10 +127,73 @@ void Motor_controller::update_motors(
 
 void Motor_controller::set_vehicle_PWM()
 {
+    if (!armed)
+    {
+        reset_motors();
+        return;
+    }
+
     motor_fl.sendThrottle(fl);
     motor_fr.sendThrottle(fr);
     motor_bl.sendThrottle(bl);
     motor_br.sendThrottle(br);
     motor_tl.sendThrottle(tl);
     motor_tr.sendThrottle(tr);
+}
+
+void Motor_controller::safety_land()
+{
+    // Gradually reduce throttle to zero
+    float reduction_step = 50.0f; // adjust as needed for smooth landing
+    if (current_mode == MODE_TANK)
+    {
+        if (tl > 0)
+            tl -= reduction_step;
+        if (tr > 0)
+            tr -= reduction_step;
+        if (tl < 0)
+            tl = 0;
+        if (tr < 0)
+            tr = 0;
+    }
+    else
+    {
+        if (fl > 0)
+            fl -= reduction_step;
+        if (fr > 0)
+            fr -= reduction_step;
+        if (bl > 0)
+            bl -= reduction_step;
+        if (br > 0)
+            br -= reduction_step;
+        if (fl < 0)
+            fl = 0;
+        if (fr < 0)
+            fr = 0;
+        if (bl < 0)
+            bl = 0;
+        if (br < 0)
+            br = 0;
+    }
+}
+
+void Motor_controller::arm_motors()
+{
+    set_armed(true);
+    pids_inner.reset();
+    pids_outer.reset();
+
+    // Send minimum throttle to arm ESCs
+    motor_fl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    motor_fr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    motor_bl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    motor_br.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    motor_tl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    motor_tr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+}
+
+void Motor_controller::disarm_motors()
+{
+    set_armed(false);
+    reset_motors();
 }
