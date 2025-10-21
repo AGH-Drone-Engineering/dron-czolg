@@ -2,8 +2,8 @@
 
 // pins
 // (update according to the wiring)
-#define SERVO_PIN 9
-#define MOTOR_FL_PIN 3
+#define SERVO_LEFT_PIN 9
+#define SERVO_RIGHT_PIN 10
 
 // LOOP
 #define LOOP_DT 20

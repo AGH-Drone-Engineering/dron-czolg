@@ -1,5 +1,6 @@
 #include "motor.h"
 #include <servo_controller.h>
+#include <config.h>
 
 Motor_controller::Motor_controller()
     : motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
@@ -9,7 +10,9 @@ Motor_controller::Motor_controller()
       motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
       motor_tr(MOTOR_PORT_TR, DShotType::DShot600),
       pids_inner(0.f, 0.f, 0.f, -1000.f, 1000.f),
-      pids_outer(0.f, 0.f, 0.f, -1000.f, 1000.f)
+      pids_outer(0.f, 0.f, 0.f, -1000.f, 1000.f),
+      servo_left(SERVO_LEFT_PIN),
+      servo_right(SERVO_RIGHT_PIN)
 {
 }
 
@@ -23,6 +26,10 @@ void Motor_controller::init()
 
     reset_motors();
     Serial.println("Motors initialized");
+
+    servo_left.attach();
+    servo_right.attach();
+    Serial.println("Servos attached");
 }
 
 void Motor_controller::reset_motors()
@@ -45,6 +52,9 @@ void Motor_controller::update_mode(float change_to_)
             current_mode = MODE_COPTER;
             pids_inner.reset();
             pids_outer.reset();
+            // check which mode should be attached and which should be detached
+            servo_left.detach();
+            servo_right.detach();
         }
     }
     else
@@ -54,7 +64,9 @@ void Motor_controller::update_mode(float change_to_)
             current_mode = MODE_TANK;
             pids_inner.reset();
             pids_outer.reset();
-            // again place for servo
+            // check which mode should be attached and which should be detached
+            servo_left.attach();
+            servo_right.attach();
         }
     }
 }

@@ -21,6 +21,8 @@ public:
 private:
     Pids3d pids_inner;
     Pids3d pids_outer;
+    ServoController servo_left;
+    ServoController servo_right;
     float fl, fr, bl, br, tl, tr; // front-left, ..., tank-left, tank-right
     DShot motor_fl;
     DShot motor_fr;

@@ -1,6 +1,6 @@
-// need to set these defines in cpp code
-// now there are some default values set in motor.cpp
-// there should be new functions to set these values from outside in pid3d.h probably
+// for now, pid values are in motor.cpp in pids initialization (demo version)
+
+// final version should have them here
 
 // Inner (rate) loop gains
 #define PID_INNER_ROLL_KP 1.0f
