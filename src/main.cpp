@@ -15,61 +15,94 @@ int sbus_status;
 
 void setup()
 {
-    Serial.begin(115200);
-    while (!Serial)
-        delay(10);
+    unsigned long last_time_us, now_us;
+    float dt;
+    int sbus_status;
 
-    MPU5060_Sensor.init();
-    SBUS_Reader.init();
-    Motor_Controller.init();
-
-    mode = DEFAULT_MODE;
-    if (mode == MODE_TANK)
+    void setup()
     {
-        // change to tank
-    }
-    else
-    {
-        // change to copter
-    }
+        Serial.begin(115200);
+        while (!Serial)
+            delay(10);
 
-    last_time_us = micros();
-}
+        MPU5060_Sensor.init();
+        SBUS_Reader.init();
+        Motor_Controller.init();
 
-void loop()
-{
-    now_us = micros();
-    dt = (now_us - last_time_us) / 1000000.0f;
-    if (dt <= 0)
-        dt = 0.001f;
-    last_time_us = now_us;
+        while (!Serial)
+            delay(10);
 
-    MPU5060_Sensor.compute_orientation();
+        MPU5060_Sensor.init();
+        SBUS_Reader.init();
+        Motor_Controller.init();
 
-    sbus_status = SBUS_Reader.Read_Sbus();
-    // TODO handle safe mode
-    switch (sbus_status)
-    {
-    case 2:
-        Serial.println("Failsafe active");
-        return;
-        break;
-    case 1:
-        Serial.println("Signal lost");
-        return;
-        break;
-    case 0:
-        SBUS_Reader.print_data();
-        break;
+        mode = DEFAULT_MODE;
+        if (mode == MODE_TANK)
+        {
+            // change to tank
+        }
+        else
+        {
+            // change to copter
+        }
+
+        last_time_us = micros();
     }
 
-    Motor_Controller.update_mode(SBUS_Reader.get_mode());
+    void loop()
+    {
+        now_us = micros();
+        void loop()
+        {
+            now_us = micros();
+            dt = (now_us - last_time_us) / 1000000.0f;
+            if (dt <= 0)
+                dt = 0.001f;
+            if (dt <= 0)
+                dt = 0.001f;
+            last_time_us = now_us;
 
-    Motor_Controller.update_motors(SBUS_Reader.get_data(), MPU5060_Sensor, dt);
+            MPU5060_Sensor.compute_orientation();
+            MPU5060_Sensor.compute_orientation();
 
-    Motor_Controller.set_vehicle_PWM();
+            sbus_status = SBUS_Reader.Read_Sbus();
+            // TODO handle safe mode
+            switch (sbus_status)
+            {
+            case 2:
+                Serial.println("Failsafe active");
+                return;
+                break;
+            case 1:
+                Serial.println("Signal lost");
+                sbus_status = SBUS_Reader.Read_Sbus();
+                // TODO handle safe mode
+                switch (sbus_status)
+                {
+                case 2:
+                    Serial.println("Failsafe active");
+                    return;
+                    break;
+                case 1:
+                    Serial.println("Signal lost");
+                    return;
+                    break;
+                case 0:
+                    SBUS_Reader.print_data();
+                    break;
+                    break;
+                case 0:
+                    SBUS_Reader.print_data();
+                    break;
+                }
 
-    SBUS_Reader.print_data();
-    // printing of PID data is in motor.cpp
-    MPU5060_Sensor.print_data();
-}
+                Motor_Controller.update_mode(SBUS_Reader.get_mode());
+
+                Motor_Controller.update_motors(SBUS_Reader.get_data(), MPU5060_Sensor, dt);
+
+                Motor_Controller.set_vehicle_PWM();
+
+                SBUS_Reader.print_data();
+                // printing of PID data is in motor.cpp
+                MPU5060_Sensor.print_data();
+            }
