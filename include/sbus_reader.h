@@ -3,6 +3,14 @@
 #include "config.h"
 #include "sbus.h"
 
+// sbus channels:
+// 0 - roll (left/right right stick)
+// 1 - pitch (up/down right stick)
+// 2 - throttle (up/down left stick)
+// 3 - yaw (left/right left stick)
+// 5 - arm (left switch)
+// 6 - mode (right switch)
+
 class Sbus_reader
 {
 private:
