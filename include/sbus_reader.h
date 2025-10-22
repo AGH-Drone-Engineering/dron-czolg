@@ -13,7 +13,7 @@ private:
     bfs::SbusRx sbus_rx;
     bfs::SbusData sbus_data;
 
-    float data[5]; // rc_throttle, rc_steer, rc_pitch, rc_roll, rc_mode
+    float data[6]; // rc_throttle, rc_steer, rc_pitch, rc_roll, rc_arm, rc_mode
 
     // 0 - OK
     // 1 - Signal lost

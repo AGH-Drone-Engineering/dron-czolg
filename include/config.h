@@ -1,9 +1,22 @@
 #pragma once
 
+// E1 pin 1
+// E2 pin 8
+// E3 pin 29
+// E4 pin 24
+
+// tank motor 1 pin 14
+// tank motor 2 pin 17
+
+// servo 1 pin 22
+// servo 2 pin 23
+
+// sbus pin 20
+
 // pins
 // (update according to the wiring)
-#define SERVO_LEFT_PIN 9
-#define SERVO_RIGHT_PIN 10
+#define SERVO_LEFT_PIN 22
+#define SERVO_RIGHT_PIN 23
 
 // LOOP
 #define LOOP_DT 20
@@ -23,13 +36,26 @@
 #define YAW_RATE_COEF 1
 
 // SBUS Channel mapping
-#define SBUS_INPUT Serial1
+#define SBUS_INPUT Serial5
 #define RC_THROTTLE_CH 0
 #define RC_STEER_CH 1
 #define RC_PITCH_CH 2
 #define RC_ROLL_CH 3
-#define RC_MODE_CH 4 // Switch between tank and copter mode
+#define RC_ARM_CH 4
+#define RC_MODE_CH 5 // Switch between tank and copter mode
 
+// E1 pin 1
+// E2 pin 8
+// E3 pin 29
+// E4 pin 24
+
+// tank motor 1 pin 14
+// tank motor 2 pin 17
+
+// servo 1 pin 22
+// servo 2 pin 23
+
+// those serials are wrong, correct pins are above
 // Ports for motors
 #define MOTOR_PORT_FL &Serial1
 #define MOTOR_PORT_FR &Serial2

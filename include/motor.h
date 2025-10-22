@@ -2,6 +2,7 @@
 #include "DShot.h"
 #include "pids3d.h"
 #include "mpu6050_sensor.h"
+#include "servo_controller.h"
 
 class Motor_controller
 {
