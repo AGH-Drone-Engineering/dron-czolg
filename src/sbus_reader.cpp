@@ -50,6 +50,16 @@ int Sbus_reader::Read_Sbus()
         data[3] = NormalizeChannel(RC_ROLL_CH);
         data[4] = sbus_data.ch[RC_ARM_CH];
         data[5] = sbus_data.ch[RC_MODE_CH];
+        data[6] = sbus_data.ch[6];
+        data[7] = sbus_data.ch[7];
+        data[8] = sbus_data.ch[8];
+        data[9] = sbus_data.ch[9];
+        data[10] = sbus_data.ch[10];
+        data[11] = sbus_data.ch[11];
+        data[12] = sbus_data.ch[12];
+        data[13] = sbus_data.ch[13];
+        data[14] = sbus_data.ch[14];
+        data[15] = sbus_data.ch[15];
 
         return 0;
     }
@@ -61,7 +71,7 @@ void Sbus_reader::print_data()
 {
     Serial.print("Throttle: ");
     Serial.print(data[0], 2);
-    Serial.print("\tSteer: ");
+    Serial.print("\tYaw: ");
     Serial.print(data[1], 2);
     Serial.print("\tPitch: ");
     Serial.print(data[2], 2);
@@ -73,6 +83,7 @@ void Sbus_reader::print_data()
     Serial.println(data[5], 2);
 }
 
+// idk why but channels are different than normally
 float Sbus_reader::get_throttle() { return data[0]; }
 float Sbus_reader::get_yaw() { return data[1]; }
 float Sbus_reader::get_pitch() { return data[2]; }

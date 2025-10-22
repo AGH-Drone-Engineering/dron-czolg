@@ -1,6 +1,7 @@
 #include "motor.h"
 #include <servo_controller.h>
 #include <config.h>
+#include <sbus_reader.h>
 
 Motor_controller::Motor_controller()
     : motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
@@ -72,14 +73,14 @@ void Motor_controller::update_mode(float change_to_)
 }
 
 void Motor_controller::update_motors(
-    float *sbus_data_,
+    float *sbus_data_, // this shouldnt be here, data should be accessed by getters from sbus reader
     Mpu6050_Sensor &mpu_sensor_,
     float dt_)
 {
     if (current_mode == MODE_TANK)
     {
-        throttle_sp = sbus_data_[0] * THROTTLE_COEF_TANK;
-        yaw_sp = sbus_data_[1] * STEER_COEF;
+        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_TANK;
+        yaw_sp = sbus_reader.get_yaw() * STEER_COEF;
         pitch_sp = 0.0f;
         roll_sp = 0.0f;
 
@@ -97,10 +98,10 @@ void Motor_controller::update_motors(
     }
     else
     {
-        throttle_sp = sbus_data_[0] * THROTTLE_COEF_COPTER;
-        yaw_sp = sbus_data_[1] * YAW_RATE_COEF;
-        pitch_sp = sbus_data_[2] * PITCH_COEF;
-        roll_sp = sbus_data_[4] * ROLL_COEF;
+        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_COPTER;
+        yaw_sp = sbus_reader.get_yaw() * YAW_RATE_COEF;
+        pitch_sp = sbus_reader.get_pitch() * PITCH_COEF;
+        roll_sp = sbus_reader.get_roll() * ROLL_COEF;
 
         pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
         roll_desired = pids_outer.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
@@ -144,7 +145,7 @@ void Motor_controller::set_vehicle_PWM()
 void Motor_controller::safety_land()
 {
     // Gradually reduce throttle to zero
-    float reduction_step = 50.0f; // adjust as needed for smooth landing
+    float reduction_step = SAFETY_LAND_REDUCTION_STEP;
     if (current_mode == MODE_TANK)
     {
         if (tl > 0)

@@ -3,6 +3,7 @@
 #include "pids3d.h"
 #include "mpu6050_sensor.h"
 #include "servo_controller.h"
+#include "sbus_reader.h"
 
 class Motor_controller
 {
@@ -30,8 +31,8 @@ public:
     void set_armed(bool arm_status) { armed = arm_status; }
 
 private:
-    Pids3d pids_inner;
     Pids3d pids_outer;
+    Pids3d pids_inner;
     ServoController servo_left;
     ServoController servo_right;
     float fl, fr, bl, br, tl, tr; // front-left, ..., tank-left, tank-right
@@ -46,5 +47,6 @@ private:
     float roll_desired, pitch_desired;
     float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;
 
+    Sbus_reader sbus_reader;
     bool armed = false;
 };

@@ -72,6 +72,18 @@
 
 Sbus_reader sbus;
 
+void print_all_sbus_data()
+{
+    float *sbus_frame = sbus.get_data();
+    for (int i = 0; i < 16; i++)
+    {
+        Serial.print("Channel ");
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.println(sbus_frame[i]);
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -88,7 +100,8 @@ void loop()
     int status = sbus.Read_Sbus();
     if (status == 0)
     {
-        sbus.print_data();
+        print_all_sbus_data();
+        delay(1000);
     }
     else if (status == 1)
     {

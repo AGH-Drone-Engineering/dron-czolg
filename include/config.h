@@ -70,6 +70,8 @@
 
 #define DSHOT_THROTTLE_ACTIVE_MIN 50
 
+#define SAFETY_LAND_REDUCTION_STEP 50.0f // adjust as needed for smooth safety landing
+
 typedef enum
 {
     MODE_TANK = 0,

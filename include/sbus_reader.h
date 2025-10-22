@@ -6,14 +6,14 @@
 class Sbus_reader
 {
 private:
-    static constexpr int SBUS_MIN = 172;
-    static constexpr int SBUS_MAX = 1811;
+    static constexpr int SBUS_MIN = 200;
+    static constexpr int SBUS_MAX = 1800;
     static constexpr int SBUS_CENTER = (SBUS_MIN + SBUS_MAX) / 2;
     static constexpr float SBUS_HALF_RANGE = (SBUS_MAX - SBUS_MIN) / 2.0f;
     bfs::SbusRx sbus_rx;
     bfs::SbusData sbus_data;
 
-    float data[6]; // rc_throttle, rc_steer, rc_pitch, rc_roll, rc_arm, rc_mode
+    float data[16]; // rc_throttle, rc_steer, rc_pitch, rc_roll, rc_arm, rc_mode
 
     // 0 - OK
     // 1 - Signal lost
