@@ -26,8 +26,14 @@ void ServoController::write_angle(int angle)
     servo_motor.write(angle);
 }
 
-// Write a specific pulse width in microseconds to the servo.
-void ServoController::write_microseconds(int us)
+void ServoController::set_servo_tank_mode()
 {
-    servo_motor.writeMicroseconds(us);
+    // Example pulse width for tank mode
+    this->write_angle(TANK_ANGLE);
+}
+
+void ServoController::set_servo_copter_mode()
+{
+    // Example pulse width for copter mode
+    this->write_angle(DRONE_ANGLE);
 }

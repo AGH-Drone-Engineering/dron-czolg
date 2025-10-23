@@ -60,7 +60,7 @@
 
 #define DEFAULT_MODE MODE_TANK
 
-#define SWITCH_MOTOR_PWM_THRESHOLD 0
+#define SWITCH_MOTOR_PWM_THRESHOLD 100
 
 #define DSHOT_THROTTLE_ACTIVE_MIN 48
 
@@ -68,6 +68,6 @@
 
 typedef enum
 {
-    MODE_TANK = 0,
+    MODE_TANK,
     MODE_COPTER
 } vehicle_mode_t;

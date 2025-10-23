@@ -8,7 +8,6 @@ Sbus_reader SBUS_Reader;
 Mpu6050_Sensor MPU5060_Sensor;
 Motor_controller Motor_Controller;
 
-vehicle_mode_t mode;
 unsigned long last_time_us, now_us;
 float dt;
 int sbus_status;
@@ -22,8 +21,6 @@ void setup()
     MPU5060_Sensor.init();
     SBUS_Reader.init();
     Motor_Controller.init();
-
-    mode = DEFAULT_MODE;
 
     last_time_us = micros();
 }

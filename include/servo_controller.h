@@ -8,6 +8,8 @@ class ServoController
 private:
     Servo servo_motor;
     int servo_pin;
+    constexpr static int DRONE_ANGLE = 0;
+    constexpr static int TANK_ANGLE = 180;
 
 public:
     // Constructor: Initializes the controller with a specific pin.
@@ -25,4 +27,7 @@ public:
     // Sets the servo position using raw pulse width values (e.g., 1000-2000 microseconds).
     // This is useful for more precise control or for continuous rotation servos.
     void write_microseconds(int us);
+
+    void set_servo_tank_mode();
+    void set_servo_copter_mode();
 };

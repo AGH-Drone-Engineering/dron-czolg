@@ -10,7 +10,8 @@ Motor_controller::Motor_controller()
       pids_inner(0.f, 0.f, 0.f, -1000.f, 1000.f),
       pids_outer(0.f, 0.f, 0.f, -1000.f, 1000.f),
       servo_left(SERVO_LEFT_PIN),
-      servo_right(SERVO_RIGHT_PIN)
+      servo_right(SERVO_RIGHT_PIN),
+      current_mode(MODE_TANK)
 {
 }
 
@@ -42,7 +43,7 @@ void Motor_controller::reset_motors()
 
 void Motor_controller::update_mode(float change_to_)
 {
-    if (change_to_ > 1000)
+    if (change_to_ > 0.5f)
     {
         // Ensure all motors are stopped before switching modes
         if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_THRESHOLD && tr <= SWITCH_MOTOR_PWM_THRESHOLD)
@@ -51,8 +52,8 @@ void Motor_controller::update_mode(float change_to_)
             pids_inner.reset();
             pids_outer.reset();
             // check which mode should be attached and which should be detached
-            servo_left.detach();
-            servo_right.detach();
+            servo_left.set_servo_copter_mode();
+            servo_right.set_servo_copter_mode();
         }
     }
     else
@@ -63,8 +64,8 @@ void Motor_controller::update_mode(float change_to_)
             pids_inner.reset();
             pids_outer.reset();
             // check which mode should be attached and which should be detached
-            servo_left.attach();
-            servo_right.attach();
+            servo_left.set_servo_tank_mode();
+            servo_right.set_servo_tank_mode();
         }
     }
 }
@@ -86,7 +87,6 @@ void Motor_controller::update_motors( // this shouldnt be here, data should be a
 
         tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
-        
 
         fl = 0;
         fr = 0;
