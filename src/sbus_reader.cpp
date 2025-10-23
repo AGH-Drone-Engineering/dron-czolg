@@ -33,6 +33,19 @@ float Sbus_reader::NormalizeChannel(int16_t channel)
     return (static_cast<float>(raw_val) - static_cast<float>(SBUS_CENTER)) / SBUS_HALF_RANGE;
 }
 
+float Sbus_reader::isChannelActive(int16_t channel)
+{
+    if (channel < 0 || channel >= bfs::SbusData::NUM_CH)
+    {
+        Serial.print("Error: isChannelActive called with invalid channel index: ");
+        Serial.println(channel);
+        return 0.0f; // Safety
+    }
+
+    int raw_val = sbus_data.ch[channel];
+    return (raw_val > SBUS_CENTER) ? 1.0f : 0.0f;
+}
+
 int Sbus_reader::Read_Sbus()
 {
     if (sbus_rx.Read())
@@ -44,22 +57,12 @@ int Sbus_reader::Read_Sbus()
         if (sbus_data.lost_frame)
             return 1;
 
-        data[0] = NormalizeChannel(RC_THROTTLE_CH);
-        data[1] = NormalizeChannel(RC_STEER_CH);
-        data[2] = NormalizeChannel(RC_PITCH_CH);
-        data[3] = NormalizeChannel(RC_ROLL_CH);
-        data[4] = sbus_data.ch[RC_ARM_CH];
-        data[5] = sbus_data.ch[RC_MODE_CH];
-        data[6] = sbus_data.ch[6];
-        data[7] = sbus_data.ch[7];
-        data[8] = sbus_data.ch[8];
-        data[9] = sbus_data.ch[9];
-        data[10] = sbus_data.ch[10];
-        data[11] = sbus_data.ch[11];
-        data[12] = sbus_data.ch[12];
-        data[13] = sbus_data.ch[13];
-        data[14] = sbus_data.ch[14];
-        data[15] = sbus_data.ch[15];
+        data[0] = NormalizeChannel(RC_THROTTLE_CH); // Throttle
+        data[1] = NormalizeChannel(RC_YAW_CH);      // Yaw
+        data[2] = NormalizeChannel(RC_PITCH_CH);    // Pitch
+        data[3] = NormalizeChannel(RC_ROLL_CH);     // Roll
+        data[4] = isChannelActive(RC_ARM_CH);       // Arm status
+        data[5] = isChannelActive(RC_MODE_CH);      // Mode
 
         return 0;
     }

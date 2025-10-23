@@ -75,7 +75,7 @@ Sbus_reader sbus;
 void print_all_sbus_data()
 {
     float *sbus_frame = sbus.get_data();
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 6; i++)
     {
         Serial.print("Channel ");
         Serial.print(i);
