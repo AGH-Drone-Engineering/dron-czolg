@@ -50,4 +50,5 @@ private:
 
     Sbus_reader sbus_reader;
     bool armed = false;
+    int map_motor_values(float val);
 };

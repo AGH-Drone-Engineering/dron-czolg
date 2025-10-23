@@ -78,11 +78,12 @@ DShot::DShot(HardwareSerial *uart, DShotType type) : uart(uart)
 void DShot::sendThrottle(int16_t throttle, bool telemetry)
 {
     throttle = convertThrottle(throttle);
-    sendPackage(createPackage(throttle + 48, telemetry));
+    sendPackage(createPackage(throttle, telemetry));
 }
 
 int16_t DShot::convertThrottle(float throttle)
 {
+    throttle = constrain(throttle, 48.0f, 2047.0f);
     return static_cast<uint16_t>(roundf(throttle));
 }
 

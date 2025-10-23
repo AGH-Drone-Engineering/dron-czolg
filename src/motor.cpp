@@ -86,6 +86,7 @@ void Motor_controller::update_motors( // this shouldnt be here, data should be a
 
         tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
+        
 
         fl = 0;
         fr = 0;
@@ -205,4 +206,10 @@ bool Motor_controller::can_arm()
         return true;
     }
     return false;
+}
+
+int Motor_controller::map_motor_values(float val)
+{
+    val = constrain(val, 48.0f, 2047.0f);
+    return static_cast<int>(val);
 }

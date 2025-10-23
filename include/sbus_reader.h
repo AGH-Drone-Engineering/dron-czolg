@@ -25,34 +25,34 @@ public:
     Sbus_reader();
     void init();
 
-    int get_throttle();
-    int get_yaw();
-    int get_pitch();
-    int get_roll();
-    int get_arm_status();
-    int get_mode();
-    int *get_data();
-    int get_status();
+    float get_throttle();
+    float get_yaw();
+    float get_pitch();
+    float get_roll();
+    float get_arm_status();
+    float get_mode();
+    float *get_data();
+    float get_status();
 
-    int Read_Sbus();
+    float Read_Sbus();
     void print_data();
 
 private:
-    static constexpr int SBUS_MIN = 175;
-    static constexpr int SBUS_MAX = 1811;
-    static constexpr int DSHOT_MIN_THROTTLE = 48;
-    static constexpr int DSHOT_MAX_THROTTLE = 2047;
-    static constexpr int SBUS_CENTER = (SBUS_MIN + SBUS_MAX) / 2;
+    static constexpr float SBUS_MIN = 175.0f;
+    static constexpr float SBUS_MAX = 1811.0f;
+    static constexpr float DSHOT_MIN_THROTTLE = 48.0f;
+    static constexpr float DSHOT_MAX_THROTTLE = 2047.0f;
+    static constexpr float SBUS_CENTER = (SBUS_MIN + SBUS_MAX) / 2;
     bfs::SbusRx sbus_rx;
     bfs::SbusData sbus_data;
 
-    int data[6]; // rc_throttle, rc_yaw, rc_pitch, rc_roll, rc_arm, rc_mode
+    float data[6]; // rc_throttle, rc_yaw, rc_pitch, rc_roll, rc_arm, rc_mode
 
     // 0 - OK
     // 1 - Signal lost
     // 2 - Failsafe
     int status; // may be enum later
 
-    int NormalizeChannel(int16_t channel_);
-    int isChannelActive(int16_t channel_);
+    float NormalizeChannel(int16_t channel_);
+    float isChannelActive(int16_t channel_);
 };
