@@ -62,13 +62,9 @@
 
 #define SWITCH_MOTOR_PWM_THRESHOLD 0
 
-#define DSHOT_THROTTLE_ACTIVE_MIN 50
+#define DSHOT_THROTTLE_ACTIVE_MIN 48
 
-#define SAFETY_LAND_REDUCTION_STEP 50.0f // adjust as needed for smooth safety landing
-
-// real values are 48-2047 but we use 0-1999 for simplicity and add 48 when sending
-#define DSHOT_MIN_THROTTLE 0
-#define DSHOT_MAX_THROTTLE 1999
+#define SAFETY_LAND_REDUCTION_STEP 50 // adjust as needed for smooth safety landing
 
 typedef enum
 {

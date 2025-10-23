@@ -29,9 +29,9 @@ public:
 
     void set_armed(bool arm_status) { armed = arm_status; }
 
+    bool can_arm();
+
 private:
-    Pids3d pids_outer;
-    Pids3d pids_inner;
     ServoController servo_left;
     ServoController servo_right;
     float fl, fr, bl, br, tl, tr; // front-left, ..., tank-left, tank-right
@@ -41,6 +41,8 @@ private:
     DShot motor_br;
     DShot motor_tl;
     DShot motor_tr;
+    Pids3d pids_outer;
+    Pids3d pids_inner;
     vehicle_mode_t current_mode;
     float throttle_sp, yaw_sp, roll_sp, pitch_sp;
     float roll_desired, pitch_desired;

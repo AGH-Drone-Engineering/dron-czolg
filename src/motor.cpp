@@ -176,21 +176,33 @@ void Motor_controller::safety_land()
 
 void Motor_controller::arm_motors()
 {
-    set_armed(true);
-    pids_inner.reset();
-    pids_outer.reset();
+    if (this->can_arm())
+    {
+        set_armed(true);
+        pids_inner.reset();
+        pids_outer.reset();
 
-    // Send minimum throttle to arm ESCs
-    motor_fl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
-    motor_fr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
-    motor_bl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
-    motor_br.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
-    motor_tl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
-    motor_tr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        // Send minimum throttle to arm ESCs
+        motor_fl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_fr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_bl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_br.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_tl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_tr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    }
 }
 
 void Motor_controller::disarm_motors()
 {
     set_armed(false);
     reset_motors();
+}
+
+bool Motor_controller::can_arm()
+{
+    if (sbus_reader.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN)
+    {
+        return true;
+    }
+    return false;
 }
