@@ -1,7 +1,4 @@
 #include "motor.h"
-#include <servo_controller.h>
-#include <config.h>
-#include <sbus_reader.h>
 
 Motor_controller::Motor_controller()
     : motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
@@ -72,8 +69,7 @@ void Motor_controller::update_mode(float change_to_)
     }
 }
 
-void Motor_controller::update_motors(
-    float *sbus_data_, // this shouldnt be here, data should be accessed by getters from sbus reader
+void Motor_controller::update_motors( // this shouldnt be here, data should be accessed by getters from sbus reader
     Mpu6050_Sensor &mpu_sensor_,
     float dt_)
 {

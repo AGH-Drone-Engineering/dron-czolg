@@ -30,7 +30,7 @@ float Sbus_reader::NormalizeChannel(int16_t channel)
     if (raw_val > SBUS_MAX)
         raw_val = SBUS_MAX;
 
-    return (static_cast<float>(raw_val) - static_cast<float>(SBUS_CENTER)) / SBUS_HALF_RANGE;
+    return (raw_val - SBUS_MIN) / (SBUS_MAX - SBUS_MIN) * (DSHOT_MAX_THROTTLE - DSHOT_MIN_THROTTLE) + DSHOT_MIN_THROTTLE;
 }
 
 float Sbus_reader::isChannelActive(int16_t channel)

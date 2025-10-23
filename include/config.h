@@ -37,12 +37,6 @@
 
 // SBUS Channel mapping
 #define SBUS_INPUT Serial5
-#define RC_THROTTLE_CH 0
-#define RC_STEER_CH 1
-#define RC_PITCH_CH 2
-#define RC_ROLL_CH 3
-#define RC_ARM_CH 4
-#define RC_MODE_CH 5 // Switch between tank and copter mode
 
 // E1 pin 1
 // E2 pin 8
@@ -71,6 +65,10 @@
 #define DSHOT_THROTTLE_ACTIVE_MIN 50
 
 #define SAFETY_LAND_REDUCTION_STEP 50.0f // adjust as needed for smooth safety landing
+
+// real values are 48-2047 but we use 0-1999 for simplicity and add 48 when sending
+#define DSHOT_MIN_THROTTLE 0
+#define DSHOT_MAX_THROTTLE 1999
 
 typedef enum
 {

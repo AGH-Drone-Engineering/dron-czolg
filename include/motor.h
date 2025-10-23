@@ -14,7 +14,6 @@ public:
     void update_mode(float change_to_); // determine mode based on switch position
     // takes float from Sbus_reader.get_mode() which returns float
     void update_motors(
-        float *sbus_data_,
         Mpu6050_Sensor &mpu_sensor_,
         float dt_);
 
