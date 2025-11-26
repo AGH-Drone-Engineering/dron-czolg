@@ -6,16 +6,29 @@ Motor_controller::Motor_controller()
       motor_bl(MOTOR_PORT_BL, DShotType::DShot600),
       motor_br(MOTOR_PORT_BR, DShotType::DShot600),
       motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
-      motor_tr(MOTOR_PORT_TR, DShotType::DShot600) {}
+      motor_tr(MOTOR_PORT_TR, DShotType::DShot600),
+      pids_inner(0.f, 0.f, 0.f, -1000.f, 1000.f),
+      pids_outer(0.f, 0.f, 0.f, -1000.f, 1000.f),
+      servo_left(SERVO_LEFT_PIN),
+      servo_right(SERVO_RIGHT_PIN),
+      current_mode(MODE_TANK)
+{
+}
 
 void Motor_controller::init()
 {
+    pids_inner = pids_inner;
+    pids_outer = pids_outer;
     pids_inner.init_all();
     pids_outer.init_all();
     Serial.println("Pids initialized");
 
     reset_motors();
     Serial.println("Motors initialized");
+
+    servo_left.attach();
+    servo_right.attach();
+    Serial.println("Servos attached");
 }
 
 void Motor_controller::reset_motors()
@@ -30,13 +43,17 @@ void Motor_controller::reset_motors()
 
 void Motor_controller::update_mode(float change_to_)
 {
-    if (change_to_ > 1000)
+    if (change_to_ > 0.5f)
     {
         // Ensure all motors are stopped before switching modes
         if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_THRESHOLD && tr <= SWITCH_MOTOR_PWM_THRESHOLD)
         {
             current_mode = MODE_COPTER;
-            // here should be Bartek's servo I guess?
+            pids_inner.reset();
+            pids_outer.reset();
+            // check which mode should be attached and which should be detached
+            servo_left.set_servo_copter_mode();
+            servo_right.set_servo_copter_mode();
         }
     }
     else
@@ -44,28 +61,29 @@ void Motor_controller::update_mode(float change_to_)
         if (current_mode != MODE_TANK && bl <= SWITCH_MOTOR_PWM_THRESHOLD && br <= SWITCH_MOTOR_PWM_THRESHOLD && fl <= SWITCH_MOTOR_PWM_THRESHOLD && fr <= SWITCH_MOTOR_PWM_THRESHOLD)
         {
             current_mode = MODE_TANK;
-            // again place for servo
+            pids_inner.reset();
+            pids_outer.reset();
+            // check which mode should be attached and which should be detached
+            servo_left.set_servo_tank_mode();
+            servo_right.set_servo_tank_mode();
         }
     }
 }
 
-void Motor_controller::update_motors(
-    float *sbus_data_,
-    Pids3d &pid_inner_,
-    Pids3d &pid_outer_,
+void Motor_controller::update_motors( // this shouldnt be here, data should be accessed by getters from sbus reader
     Mpu6050_Sensor &mpu_sensor_,
     float dt_)
 {
     if (current_mode == MODE_TANK)
     {
-        throttle_sp = sbus_data_[0] * THROTTLE_COEF_TANK;
-        yaw_sp = sbus_data_[1] * STEER_COEF;
+        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_TANK;
+        yaw_sp = sbus_reader.get_yaw() * STEER_COEF;
         pitch_sp = 0.0f;
         roll_sp = 0.0f;
 
-        pid_yaw_ctrl = pid_inner_.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
-        pid_roll_ctrl = pid_inner_.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
-        pid_pitch_ctrl = pid_inner_.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
+        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
+        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
+        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
 
         tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
@@ -77,16 +95,16 @@ void Motor_controller::update_motors(
     }
     else
     {
-        throttle_sp = sbus_data_[0] * THROTTLE_COEF_COPTER;
-        yaw_sp = sbus_data_[1] * YAW_RATE_COEF;
-        pitch_sp = sbus_data_[2] * PITCH_COEF;
-        roll_sp = sbus_data_[4] * ROLL_COEF;
+        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_COPTER;
+        yaw_sp = sbus_reader.get_yaw() * YAW_RATE_COEF;
+        pitch_sp = sbus_reader.get_pitch() * PITCH_COEF;
+        roll_sp = sbus_reader.get_roll() * ROLL_COEF;
 
-        pid_yaw_ctrl = pid_inner_.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
-        roll_desired = pid_outer_.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
-        pitch_desired = pid_outer_.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
-        pid_roll_ctrl = pid_inner_.roll.compute(mpu_sensor_.get_roll_rate(), roll_desired, dt_);
-        pid_pitch_ctrl = pid_inner_.pitch.compute(mpu_sensor_.get_pitch_rate(), pitch_desired, dt_);
+        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
+        roll_desired = pids_outer.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
+        pitch_desired = pids_outer.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
+        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll_rate(), roll_desired, dt_);
+        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch_rate(), pitch_desired, dt_);
 
         fr = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         fl = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl + pid_pitch_ctrl;
@@ -107,10 +125,91 @@ void Motor_controller::update_motors(
 
 void Motor_controller::set_vehicle_PWM()
 {
+    if (!armed)
+    {
+        reset_motors();
+        return;
+    }
+
     motor_fl.sendThrottle(fl);
     motor_fr.sendThrottle(fr);
     motor_bl.sendThrottle(bl);
     motor_br.sendThrottle(br);
     motor_tl.sendThrottle(tl);
     motor_tr.sendThrottle(tr);
+}
+
+void Motor_controller::safety_land()
+{
+    // Gradually reduce throttle to zero
+    float reduction_step = SAFETY_LAND_REDUCTION_STEP;
+    if (current_mode == MODE_TANK)
+    {
+        if (tl > 0)
+            tl -= reduction_step;
+        if (tr > 0)
+            tr -= reduction_step;
+        if (tl < 0)
+            tl = 0;
+        if (tr < 0)
+            tr = 0;
+    }
+    else
+    {
+        if (fl > 0)
+            fl -= reduction_step;
+        if (fr > 0)
+            fr -= reduction_step;
+        if (bl > 0)
+            bl -= reduction_step;
+        if (br > 0)
+            br -= reduction_step;
+        if (fl < 0)
+            fl = 0;
+        if (fr < 0)
+            fr = 0;
+        if (bl < 0)
+            bl = 0;
+        if (br < 0)
+            br = 0;
+    }
+}
+
+void Motor_controller::arm_motors()
+{
+    if (this->can_arm())
+    {
+        set_armed(true);
+        pids_inner.reset();
+        pids_outer.reset();
+
+        // Send minimum throttle to arm ESCs
+        motor_fl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_fr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_bl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_br.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_tl.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+        motor_tr.sendThrottle(DSHOT_THROTTLE_ACTIVE_MIN);
+    }
+}
+
+void Motor_controller::disarm_motors()
+{
+    set_armed(false);
+    reset_motors();
+}
+
+bool Motor_controller::can_arm()
+{
+    if (sbus_reader.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN)
+    {
+        return true;
+    }
+    return false;
+}
+
+int Motor_controller::map_motor_values(float val)
+{
+    val = constrain(val, 48.0f, 2047.0f);
+    return static_cast<int>(val);
 }

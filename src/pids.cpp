@@ -37,10 +37,17 @@ float Pids::compute(float meas_, float sp_, float dt_)
     float out = Kp * err + Ki * integral + Kd * deriv;
 
     if (out > out_max)
+    {
+        prev_err = err;
         return out_max;
+    }
     if (out < out_min)
+    {
+        prev_err = err;
         return out_min;
+    }
 
+    prev_err = err;
     return out;
 }
 
