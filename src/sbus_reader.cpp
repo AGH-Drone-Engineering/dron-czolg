@@ -5,15 +5,15 @@ Sbus_reader::Sbus_reader() : sbus_rx(&SBUS_INPUT) {}
 void Sbus_reader::init()
 {
     sbus_rx.Begin();
-    Serial.println("SBUS Reader Initialized");
+    // Serial.println("SBUS Reader Initialized");
 }
 
 float Sbus_reader::NormalizeChannel(int16_t channel)
 {
     if (channel < 0 || channel >= bfs::SbusData::NUM_CH)
     {
-        Serial.print("Error: NormalizeChannel called with invalid channel index: ");
-        Serial.println(channel);
+        // Serial.print("Error: NormalizeChannel called with invalid channel index: ");
+        // Serial.println(channel);
         return 0; // Safety
     }
 
@@ -25,8 +25,8 @@ float Sbus_reader::isChannelActive(int16_t channel)
 {
     if (channel < 0 || channel >= bfs::SbusData::NUM_CH)
     {
-        Serial.print("Error: isChannelActive called with invalid channel index: ");
-        Serial.println(channel);
+        // Serial.print("Error: isChannelActive called with invalid channel index: ");
+        // Serial.println(channel);
         return 0.0; // Safety
     }
 

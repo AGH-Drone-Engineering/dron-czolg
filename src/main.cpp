@@ -48,18 +48,26 @@ void loop()
     switch (sbus_status)
     {
     case 2:
-        Serial.println("Failsafe active");
+        if (millis() % 1000 < LOOP_DT)
+            Serial.println("Failsafe active");
         Motor_Controller.safety_land();
         return;
         break;
     case 1:
-        Serial.println("Signal lost");
-        Motor_Controller.safety_land();
+        if (millis() % 1000 < LOOP_DT)
+            Serial.println("Lost frame");
+        // Motor_Controller.safety_land();
         return;
         break;
     case 0:
         // SBUS_Reader.print_data();
         break;
+    }
+    if (millis() % 1000 < LOOP_DT)
+    {
+        // limit update rate to 50 Hz for stability
+        SBUS_Reader.print_data();
+        return;
     }
 
     Motor_Controller.update_mode(SBUS_Reader.get_mode());
@@ -68,7 +76,7 @@ void loop()
 
     Motor_Controller.set_vehicle_PWM();
 
-    SBUS_Reader.print_data();
+    // SBUS_Reader.print_data();
     // printing of PID data is in motor.cpp
-    MPU5060_Sensor.print_data();
+    // MPU5060_Sensor.print_data();
 }

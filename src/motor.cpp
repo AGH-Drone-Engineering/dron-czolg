@@ -169,12 +169,13 @@ void Motor_controller::update_motors(
         tr = 0;
     }
     // Print PID output
-    Serial.print("PID Control Yaw: ");
-    Serial.print(pid_yaw_ctrl);
-    Serial.print(", Roll: ");
-    Serial.print(pid_roll_ctrl);
-    Serial.print(", Pitch: ");
-    Serial.println(pid_pitch_ctrl);
+
+    // Serial.print("PID Control Yaw: ");
+    // Serial.print(pid_yaw_ctrl);
+    // Serial.print(", Roll: ");
+    // Serial.print(pid_roll_ctrl);
+    // Serial.print(", Pitch: ");
+    // Serial.println(pid_pitch_ctrl);
 }
 
 void Motor_controller::set_vehicle_PWM()
