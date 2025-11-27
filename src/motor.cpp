@@ -139,9 +139,10 @@ void Motor_controller::update_motors(
         pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
         pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
 
-        tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
-        tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
-
+        // tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
+        // tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
+        tl = throttle_sp;
+        tr = throttle_sp;
         fl = 0;
         fr = 0;
         bl = 0;

@@ -67,7 +67,10 @@ void loop()
     {
         // limit update rate to 50 Hz for stability
         SBUS_Reader.print_data();
-        return;
+        Serial.print("TL: ");
+        Serial.print(Motor_Controller.get_tl());
+        Serial.print(" TR: ");
+        Serial.println(Motor_Controller.get_tr());
     }
 
     Motor_Controller.update_mode(SBUS_Reader.get_mode());

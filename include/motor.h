@@ -31,6 +31,9 @@ public:
 
     bool can_arm();
 
+    float get_tl() { return tl; }
+    float get_tr() { return tr; }
+
 private:
     ServoController servo_left;
     ServoController servo_right;
