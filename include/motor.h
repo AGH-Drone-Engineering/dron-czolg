@@ -44,6 +44,8 @@ private:
     Pids3d pids_outer;
     Pids3d pids_inner;
     vehicle_mode_t current_mode;
+    vehicle_mode_t target_mode;
+    unsigned long transition_start_time;
     float throttle_sp, yaw_sp, roll_sp, pitch_sp;
     float roll_desired, pitch_desired;
     float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;

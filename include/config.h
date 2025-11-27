@@ -66,8 +66,11 @@
 
 #define SAFETY_LAND_REDUCTION_STEP 50 // adjust as needed for smooth safety landing
 
+#define TRANSITION_TIME 3000 // milliseconds
+
 typedef enum
 {
     MODE_TANK,
-    MODE_COPTER
+    MODE_COPTER,
+    MODE_TRANSITION
 } vehicle_mode_t;

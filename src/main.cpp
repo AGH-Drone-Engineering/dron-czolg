@@ -33,6 +33,15 @@ void loop()
         dt = 0.001f;
     last_time_us = now_us;
 
+    if (SBUS_Reader.get_arm_status() > 0.5f)
+    {
+        Motor_Controller.arm_motors();
+    }
+    else
+    {
+        Motor_Controller.disarm_motors();
+    }
+
     MPU5060_Sensor.compute_orientation();
 
     sbus_status = SBUS_Reader.Read_Sbus();

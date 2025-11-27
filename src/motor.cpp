@@ -33,6 +33,9 @@ void Motor_controller::init()
     servo_left.attach();
     servo_right.attach();
     Serial.println("Servos attached");
+
+    current_mode = MODE_TRANSITION;
+    transition_start_time = 0;
 }
 
 void Motor_controller::reset_motors()
@@ -45,39 +48,86 @@ void Motor_controller::reset_motors()
     motor_tr.sendThrottle(0);
 }
 
+// we should make some handling for transition during flight to prevent sudden engine stop
 void Motor_controller::update_mode(float change_to_)
 {
-    if (change_to_ > 0.5f)
+    vehicle_mode_t desired_mode = (change_to_ > 0.5f) ? MODE_COPTER : MODE_TANK;
+    if (current_mode == MODE_TRANSITION)
     {
-        // Ensure all motors are stopped before switching modes
-        if (current_mode != MODE_COPTER && tl <= SWITCH_MOTOR_PWM_THRESHOLD && tr <= SWITCH_MOTOR_PWM_THRESHOLD)
+        if (current_mode == MODE_TRANSITION)
         {
-            current_mode = MODE_COPTER;
-            pids_inner.reset();
-            pids_outer.reset();
-            // check which mode should be attached and which should be detached
-            servo_left.set_servo_copter_mode();
-            servo_right.set_servo_copter_mode();
+            if (transition_start_time == 0)
+            {
+                current_mode = desired_mode;
+                target_mode = desired_mode;
+
+                // Ustaw serwa natychmiast
+                if (current_mode == MODE_COPTER)
+                {
+                    servo_left.set_servo_copter_mode();
+                    servo_right.set_servo_copter_mode();
+                }
+                else
+                {
+                    servo_left.set_servo_tank_mode();
+                    servo_right.set_servo_tank_mode();
+                }
+                Serial.print("INIT MODE: ");
+                Serial.println(current_mode == MODE_COPTER ? "COPTER" : "TANK");
+                return;
+            }
+            if (millis() - transition_start_time >= TRANSITION_TIME)
+            {
+                current_mode = target_mode;
+                pids_inner.reset();
+                pids_outer.reset();
+
+                Serial.print("TRANSITION DONE -> ");
+                Serial.println(current_mode == MODE_COPTER ? "COPTER" : "TANK");
+            }
         }
     }
     else
     {
-        if (current_mode != MODE_TANK && bl <= SWITCH_MOTOR_PWM_THRESHOLD && br <= SWITCH_MOTOR_PWM_THRESHOLD && fl <= SWITCH_MOTOR_PWM_THRESHOLD && fr <= SWITCH_MOTOR_PWM_THRESHOLD)
+        if (desired_mode != current_mode && desired_mode != target_mode)
         {
-            current_mode = MODE_TANK;
+            Serial.println("STARTING TRANSITION...");
+            current_mode = MODE_TRANSITION;
+            target_mode = desired_mode;
+            transition_start_time = millis();
+
             pids_inner.reset();
             pids_outer.reset();
-            // check which mode should be attached and which should be detached
-            servo_left.set_servo_tank_mode();
-            servo_right.set_servo_tank_mode();
+
+            // Rozpocznij ruch serw
+            if (target_mode == MODE_COPTER)
+            {
+                servo_left.set_servo_copter_mode();
+                servo_right.set_servo_copter_mode();
+            }
+            else
+            {
+                servo_left.set_servo_tank_mode();
+                servo_right.set_servo_tank_mode();
+            }
         }
     }
 }
 
-void Motor_controller::update_motors( // this shouldnt be here, data should be accessed by getters from sbus reader
+void Motor_controller::update_motors(
     Mpu6050_Sensor &mpu_sensor_,
     float dt_)
 {
+    if (current_mode == MODE_TRANSITION)
+    {
+        fl = 0;
+        fr = 0;
+        bl = 0;
+        br = 0;
+        tl = 0;
+        tr = 0;
+        return;
+    }
     if (current_mode == MODE_TANK)
     {
         throttle_sp = sbus_reader_ref.get_throttle() * THROTTLE_COEF_TANK;
@@ -205,7 +255,7 @@ void Motor_controller::disarm_motors()
 
 bool Motor_controller::can_arm()
 {
-    if (sbus_reader_ref.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN)
+    if (sbus_reader_ref.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN && current_mode != MODE_TRANSITION)
     {
         return true;
     }
