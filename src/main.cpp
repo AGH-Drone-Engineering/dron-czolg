@@ -6,7 +6,7 @@
 
 Sbus_reader SBUS_Reader;
 Mpu6050_Sensor MPU5060_Sensor;
-Motor_controller Motor_Controller;
+Motor_controller Motor_Controller(SBUS_Reader);
 
 unsigned long last_time_us, now_us;
 float dt;

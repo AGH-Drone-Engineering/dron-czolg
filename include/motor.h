@@ -8,7 +8,7 @@
 class Motor_controller
 {
 public:
-    Motor_controller();
+    Motor_controller(Sbus_reader &sbus_reader_);
     void init();
     void reset_motors();
     void update_mode(float change_to_); // determine mode based on switch position
@@ -48,7 +48,7 @@ private:
     float roll_desired, pitch_desired;
     float pid_yaw_ctrl, pid_roll_ctrl, pid_pitch_ctrl;
 
-    Sbus_reader sbus_reader;
+    Sbus_reader &sbus_reader_ref;
     bool armed = false;
     int map_motor_values(float val);
 };

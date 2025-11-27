@@ -1,7 +1,8 @@
 #include "motor.h"
 
-Motor_controller::Motor_controller()
-    : motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
+Motor_controller::Motor_controller(Sbus_reader &sbus_reader_)
+    : sbus_reader_ref(sbus_reader_),
+      motor_fl(MOTOR_PORT_FL, DShotType::DShot600),
       motor_fr(MOTOR_PORT_FR, DShotType::DShot600),
       motor_bl(MOTOR_PORT_BL, DShotType::DShot600),
       motor_br(MOTOR_PORT_BR, DShotType::DShot600),
@@ -17,6 +18,9 @@ Motor_controller::Motor_controller()
 
 void Motor_controller::init()
 {
+    sbus_reader_ref.init();
+    Serial.println("Sbus initialized");
+
     pids_inner = pids_inner;
     pids_outer = pids_outer;
     pids_inner.init_all();
@@ -76,8 +80,8 @@ void Motor_controller::update_motors( // this shouldnt be here, data should be a
 {
     if (current_mode == MODE_TANK)
     {
-        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_TANK;
-        yaw_sp = sbus_reader.get_yaw() * STEER_COEF;
+        throttle_sp = sbus_reader_ref.get_throttle() * THROTTLE_COEF_TANK;
+        yaw_sp = sbus_reader_ref.get_yaw() * STEER_COEF;
         pitch_sp = 0.0f;
         roll_sp = 0.0f;
 
@@ -95,10 +99,10 @@ void Motor_controller::update_motors( // this shouldnt be here, data should be a
     }
     else
     {
-        throttle_sp = sbus_reader.get_throttle() * THROTTLE_COEF_COPTER;
-        yaw_sp = sbus_reader.get_yaw() * YAW_RATE_COEF;
-        pitch_sp = sbus_reader.get_pitch() * PITCH_COEF;
-        roll_sp = sbus_reader.get_roll() * ROLL_COEF;
+        throttle_sp = sbus_reader_ref.get_throttle() * THROTTLE_COEF_COPTER;
+        yaw_sp = sbus_reader_ref.get_yaw() * YAW_RATE_COEF;
+        pitch_sp = sbus_reader_ref.get_pitch() * PITCH_COEF;
+        roll_sp = sbus_reader_ref.get_roll() * ROLL_COEF;
 
         pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
         roll_desired = pids_outer.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
@@ -201,7 +205,7 @@ void Motor_controller::disarm_motors()
 
 bool Motor_controller::can_arm()
 {
-    if (sbus_reader.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN)
+    if (sbus_reader_ref.get_throttle() < DSHOT_THROTTLE_ACTIVE_MIN)
     {
         return true;
     }
