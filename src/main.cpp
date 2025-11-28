@@ -33,11 +33,11 @@ void loop()
         dt = 0.001f;
     last_time_us = now_us;
 
-    if (SBUS_Reader.get_arm_status() > 0.5f)
+    if (SBUS_Reader.get_arm_status() > 0.5f && Motor_Controller.is_armed() == false)
     {
         Motor_Controller.arm_motors();
     }
-    else
+    else if (SBUS_Reader.get_arm_status() < 0.5f && Motor_Controller.is_armed() == true)
     {
         Motor_Controller.disarm_motors();
     }
