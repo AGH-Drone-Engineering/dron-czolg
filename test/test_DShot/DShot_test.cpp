@@ -1,6 +1,8 @@
+// do poprawy calosc
 #include <unity.h>
 #include "Arduino.h" // Mock Arduino
 #include "DShot.h"   // Mock DShot
+#include "config.h"
 
 // Funkcje z DShot.cpp, które możemy testować (statyczne lub publiczne)
 static inline uint16_t createPackage(uint16_t value, bool telemetry)

@@ -1,6 +1,13 @@
 #include "sbus_reader.h"
 
-Sbus_reader::Sbus_reader() : sbus_rx(&SBUS_INPUT) {}
+Sbus_reader::Sbus_reader()
+#ifdef NATIVE_TESTING
+    : sbus_rx() // Użyj konstruktora domyślnego w native
+#else
+    : sbus_rx(&SBUS_INPUT) // Oryginalny dla Teensy
+#endif
+{
+}
 
 void Sbus_reader::init()
 {
@@ -18,7 +25,7 @@ float Sbus_reader::NormalizeChannel(int16_t channel)
     }
 
     int raw_val = sbus_data.ch[channel];
-    return map(raw_val, SBUS_MIN, SBUS_MAX, 48, 2047);
+    return constrain(raw_val, SBUS_MIN, SBUS_MAX);
 }
 
 float Sbus_reader::isChannelActive(int16_t channel)
@@ -74,7 +81,6 @@ void Sbus_reader::print_data()
     Serial.println(data[5], 2);
 }
 
-// idk why but channels are different than normally
 float Sbus_reader::get_throttle() { return data[0]; }
 float Sbus_reader::get_yaw() { return data[1]; }
 float Sbus_reader::get_pitch() { return data[2]; }

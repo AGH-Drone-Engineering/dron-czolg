@@ -4,8 +4,10 @@
 #include "motor.h"
 #include "pids3d.h"
 
+#ifndef NATIVE_TESTING
+
 Sbus_reader SBUS_Reader;
-Mpu6050_Sensor MPU5060_Sensor;
+Mpu6050_Sensor MPU6050_Sensor;
 Motor_controller Motor_Controller(SBUS_Reader);
 
 unsigned long last_time_us, now_us;
@@ -18,7 +20,7 @@ void setup()
     while (!Serial)
         delay(10);
 
-    MPU5060_Sensor.init();
+    MPU6050_Sensor.init();
     SBUS_Reader.init();
     Motor_Controller.init();
 
@@ -42,7 +44,7 @@ void loop()
         Motor_Controller.disarm_motors();
     }
 
-    MPU5060_Sensor.compute_orientation();
+    MPU6050_Sensor.compute_orientation();
 
     sbus_status = SBUS_Reader.Read_Sbus();
     switch (sbus_status)
@@ -75,11 +77,13 @@ void loop()
 
     Motor_Controller.update_mode(SBUS_Reader.get_mode());
 
-    Motor_Controller.update_motors(MPU5060_Sensor, dt);
+    Motor_Controller.update_motors(MPU6050_Sensor, dt);
 
     Motor_Controller.set_vehicle_PWM();
 
     // SBUS_Reader.print_data();
     // printing of PID data is in motor.cpp
-    // MPU5060_Sensor.print_data();
+    // MPU6050_Sensor.print_data();
 }
+
+#endif // UNIT_TEST

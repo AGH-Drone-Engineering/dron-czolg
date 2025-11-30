@@ -38,10 +38,6 @@ public:
     void print_data();
 
 private:
-    static constexpr float SBUS_MIN = 175.0f;
-    static constexpr float SBUS_MAX = 1811.0f;
-    static constexpr float DSHOT_MIN_THROTTLE = 48.0f;
-    static constexpr float DSHOT_MAX_THROTTLE = 2047.0f;
     static constexpr float SBUS_CENTER = (SBUS_MIN + SBUS_MAX) / 2;
     bfs::SbusRx sbus_rx;
     bfs::SbusData sbus_data;

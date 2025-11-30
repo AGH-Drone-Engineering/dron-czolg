@@ -36,8 +36,11 @@
 #define YAW_RATE_COEF 1
 
 // SBUS Channel mapping
+#ifdef NATIVE_TESTING
+#define SBUS_INPUT dummy
+#else
 #define SBUS_INPUT Serial5
-
+#endif
 // E1 pin 1
 // E2 pin 8
 // E3 pin 29
@@ -51,18 +54,31 @@
 
 // those serials are wrong, correct pins are above
 // Ports for motors
+#ifdef NATIVE_TESTING
+#define MOTOR_PORT_FL nullptr
+#define MOTOR_PORT_FR nullptr
+#define MOTOR_PORT_BL nullptr
+#define MOTOR_PORT_BR nullptr
+#define MOTOR_PORT_TL nullptr
+#define MOTOR_PORT_TR nullptr
+#else
 #define MOTOR_PORT_FL &Serial1
 #define MOTOR_PORT_FR &Serial2
 #define MOTOR_PORT_BL &Serial3
 #define MOTOR_PORT_BR &Serial4
 #define MOTOR_PORT_TL &Serial5
 #define MOTOR_PORT_TR &Serial6
+#endif
 
 #define DEFAULT_MODE MODE_TANK
 
 #define SWITCH_MOTOR_PWM_THRESHOLD 100
 
-#define DSHOT_THROTTLE_ACTIVE_MIN 48
+#define SBUS_MIN 175.0f
+#define SBUS_MAX 1811.0f
+
+#define DSHOT_THROTTLE_ACTIVE_MIN 48.0f
+#define DSHOT_THROTTLE_ACTIVE_MAX 2047.0f
 
 #define SAFETY_LAND_REDUCTION_STEP 50 // adjust as needed for smooth safety landing
 
