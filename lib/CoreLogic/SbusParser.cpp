@@ -3,7 +3,7 @@
 
 float SbusParser::normalizeChannel(int16_t rawValue)
 {
-    return constrain(static_cast<float>(rawValue), SBUS_MIN, SBUS_MAX);
+    return constrainFloat(static_cast<float>(rawValue), SBUS_MIN, SBUS_MAX);
 }
 
 float SbusParser::isChannelActive(int16_t rawValue)

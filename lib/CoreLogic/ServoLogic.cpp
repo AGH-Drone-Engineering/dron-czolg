@@ -18,8 +18,8 @@ void ServoLogic::detach()
 void ServoLogic::setAngle(int angle)
 {
     // Ogranicz kąt do zakresu 0-180
-    angle = static_cast<int>(constrain(static_cast<float>(angle), 0.0f, 180.0f));
-    
+    angle = static_cast<int>(constrainFloat(static_cast<float>(angle), 0.0f, 180.0f));
+
     // Biblioteka Servo mapuje kąt 0-180 na PWM 544-2400 µs
     // My używamy bezpośrednio kąta - driver powinien obsłużyć mapowanie
     driver.setAngle(leftPin, angle);
@@ -29,7 +29,7 @@ void ServoLogic::setAngle(int angle)
 void ServoLogic::setAngleFloat(float angle)
 {
     // Mapuj z zakresu -90..+90 na 0..180
-    int mappedAngle = static_cast<int>(map(angle, -90.0f, 90.0f, 0.0f, 180.0f));
+    int mappedAngle = static_cast<int>(mapFloat(angle, -90.0f, 90.0f, 0.0f, 180.0f));
     setAngle(mappedAngle);
 }
 
@@ -46,7 +46,7 @@ void ServoLogic::setCopterMode()
 void ServoLogic::setMicroseconds(int us)
 {
     // Ogranicz do typowego zakresu serw
-    us = static_cast<int>(constrain(static_cast<float>(us), 500.0f, 2500.0f));
+    us = static_cast<int>(constrainFloat(static_cast<float>(us), 500.0f, 2500.0f));
     driver.setMicroseconds(leftPin, us);
     driver.setMicroseconds(rightPin, us);
 }
