@@ -13,18 +13,18 @@ System działa w pętli czasu rzeczywistego na mikrokontrolerze Teensy. Główny
 
 2.  **Przetwarzanie:**
 
-    - **PID:** Algorytmy regulatorów porównują _wartość zadaną_ (od pilota) z _wartością mierzoną_ (z czujników) i obliczają korektę niezbędną do stabilizacji.
+    - **PID:** Kaskadowe regulatory PID (zewnętrzna pętla: kąt→rate, wewnętrzna pętla: rate→output) porównują wartość zadaną z mierzoną i obliczają korektę.
     - **Mikser:** Przelicza wyjścia regulatorów na konkretne obroty silników w zależności od aktywnego trybu:
-      - _Tryb Czołgu:_ Sterowanie różnicowe gąsienicami.
-      - _Tryb Drona:_ Sterowanie ciągiem i momentami obrotowymi 4 śmigieł.
+      - _Tryb Czołgu (TankMixer):_ Sterowanie różnicowe gąsienicami.
+      - _Tryb Drona (CopterMixer):_ Sterowanie ciągiem i momentami obrotowymi 4 śmigieł (konfiguracja X).
 
 3.  **Wykonanie:**
-    - Obliczone wartości są wysyłane do regulatorów silników (ESC) przy użyciu szybkiego protokołu cyfrowego **DShot**.
+    - Obliczone wartości są wysyłane do regulatorów silników (ESC) przy użyciu szybkiego protokołu cyfrowego **DShot600**.
     - Serwomechanizmy odpowiadają za fizyczną transformację ramion pojazdu przy zmianie trybu.
 
 ## Architektura Projektu
 
-Projekt wykorzystuje architekturę warstwową z wzorcem **Dependency Injection (DI)**, co umożliwia łatwe testowanie jednostkowe i podmianę implementacji sprzętowych.
+Projekt wykorzystuje architekturę warstwową z wzorcem **Dependency Injection (DI)** oraz **Single Responsibility Principle (SRP)**, co umożliwia łatwe testowanie jednostkowe i podmianę implementacji sprzętowych.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -34,10 +34,40 @@ Projekt wykorzystuje architekturę warstwową z wzorcem **Dependency Injection (
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
+│                   FlightController                         │
+│              (Główny orkiestrator systemu)                 │
+└─────────────────────────────────────────────────────────────┘
+          │           │           │           │
+          ▼           ▼           ▼           ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│ ModeManager  │ │ArmingManager │ │SafetyControl │ │Stabilization │
+│  (tryby)     │ │ (arm/disarm) │ │ (failsafe)   │ │ Controller   │
+└──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
+                                                         │
+                            ┌────────────────────────────┤
+                            ▼                            ▼
+                     ┌──────────────┐           ┌──────────────┐
+                     │  TankMixer   │           │ CopterMixer  │
+                     └──────────────┘           └──────────────┘
+                            │                            │
+                            └────────────┬───────────────┘
+                                         ▼
+                                  ┌──────────────┐
+                                  │ MotorOutput  │
+                                  │  (DShot ESC) │
+                                  └──────────────┘
+```
+
+### Warstwy systemu
+
+```
+┌─────────────────────────────────────────────────────────────┐
 │                    lib/CoreLogic/                          │
 │   (Logika biznesowa - niezależna od sprzętu)              │
-│   SbusParser, PidController, MotorLogic, ImuLogic,        │
-│   ServoLogic, Utils                                        │
+│   FlightController, StabilizationController, Pid,         │
+│   ModeManager, ArmingManager, SafetyController,           │
+│   TankMixer, CopterMixer, MotorOutput, SbusParser,        │
+│   ImuLogic, ServoLogic                                     │
 └─────────────────────────────────────────────────────────────┘
                             │
                             ▼
@@ -59,14 +89,16 @@ Projekt wykorzystuje architekturę warstwową z wzorcem **Dependency Injection (
 
 ### Pipeline Przetwarzania Danych
 
-Pipeline to sekwencyjny przepływ danych w głównej pętli programu, realizowany w `loop()` w `src/main.cpp`. Każdy cykl trwa około 10-20 ms (w zależności od obciążenia), zapewniając stabilność w czasie rzeczywistym. Kroki pipeline'u są następujące:
+Pipeline to sekwencyjny przepływ danych w głównej pętli programu, realizowany w `FlightController.update()`. Każdy cykl trwa około 20 ms, zapewniając stabilność w czasie rzeczywistym:
 
 1. **Odczyt z Radia:** `SbusParser` parsuje kanały SBUS na wartości throttle/yaw/pitch/roll oraz status uzbrojenia i trybu.
-2. **Odczyt z IMU:** `ImuLogic` pobiera dane z sensora i oblicza orientację (roll, pitch, yaw).
-3. **Obliczenie PID:** `PidController` porównuje setpointy (od pilota) z pomiarami (z IMU) i generuje sygnały korekcyjne.
-4. **Aktualizacja Silników:** `MotorLogic` konwertuje wartości throttle na pakiety DShot i wysyła do ESC.
-5. **Aktualizacja Serw:** `ServoLogic` ustawia kąty serwomechanizmów dla transformacji ramion.
-6. **Powtórzenie:** Pętla się powtarza, zapewniając ciągłą korektę.
+2. **Odczyt z IMU:** `ImuLogic` pobiera dane z sensora i oblicza orientację (roll, pitch, yaw) oraz prędkości kątowe (rate) za pomocą filtra komplementarnego.
+3. **Sprawdzenie Failsafe:** `SafetyController` wykrywa utratę sygnału RC i inicjuje bezpieczne lądowanie.
+4. **Aktualizacja Trybu:** `ModeManager` zarządza przełączaniem TANK↔COPTER z kontrolowaną tranzycją serw.
+5. **Sprawdzenie Arming:** `ArmingManager` kontroluje uzbrojenie silników z warunkami bezpieczeństwa.
+6. **Obliczenie PID:** `StabilizationController` realizuje kaskadowy PID (angle→rate→output).
+7. **Miksowanie:** `TankMixer` lub `CopterMixer` przelicza wyjścia PID na wartości dla 6 silników.
+8. **Wysyłka do ESC:** `MotorOutput` konwertuje wartości na pakiety DShot i wysyła do ESC.
 
 ## Struktura Projektu i Szczegółowy Opis Plików
 
@@ -78,50 +110,114 @@ Projekt został podzielony na warstwy odpowiedzialne za konkretne aspekty dział
 
   - **Rola:** Główny plik konfiguracyjny całego systemu.
   - **Co zawiera:**
-    - Definicje pinów mikrokontrolera (przypisanie silników, serw, czujników).
-    - Mapowanie portów szeregowych dla silników (`MOTOR_PORT_FL`, `MOTOR_PORT_FR`, itd.).
-    - Stałe SBUS (`SBUS_MIN`, `SBUS_MAX`) i DShot (`DSHOT_THROTTLE_ACTIVE_MIN`, `DSHOT_THROTTLE_ACTIVE_MAX`).
-    - Definicje trybów pracy (`MODE_TANK`, `MODE_COPTER`, `MODE_TRANSITION`).
-    - Współczynniki sterowania dla obu trybów.
-  - **Kiedy edytować:** Gdy zmieniasz piny, zmieniasz ramę drona lub chcesz zmienić ogólne zachowanie.
+    - Piny serw i silników
+    - Parametry czasowe (LOOP_DT, DEBUG_INTERVAL, TRANSITION_TIME)
+    - Konfiguracja I2C i IMU (I2C_CLOCK_SPEED, IMU_FILTER_ALPHA, skale sensora)
+    - **Wzmocnienia PID** dla wszystkich osi (KP, KI, KD, limity)
+    - Współczynniki RC dla obu trybów (THROTTLE_COEF, STEER_COEF, etc.)
+    - Stałe SBUS i DShot
+    - Parametry bezpieczeństwa (SAFETY_LAND_REDUCTION_STEP)
+  - **Kiedy edytować:** Gdy zmieniasz piny, stroisz PID, lub zmieniasz parametry lotu.
 
 - **`src/main.cpp`**
   - **Rola:** Punkt wejścia (Entry Point) i kompozycja Dependency Injection.
   - **Działanie:**
     1.  Tworzy instancje sterowników sprzętowych (TeensyDrivers).
-    2.  Wstrzykuje je do klas logiki (CoreLogic) przez konstruktory.
-    3.  W `loop()` realizuje główny pipeline przetwarzania.
+    2.  Wstrzykuje je do `FlightController` przez konstruktory.
+    3.  W `loop()` wywołuje `parser.parse()`, `imu.update()` i `flightController.update(dt)`.
   - **Kluczowe elementy:**
     - Instancje sprzętowe: `TeensySbusReader`, `TeensyPidTimer`, `TeensyDShotDriver`, `TeensyMpuSensor`, `TeensyServoDriver`.
-    - Obiekty logiki: `SbusParser`, `PidController`, `MotorLogic`, `ImuLogic`, `ServoLogic`.
+    - `FlightController` - główny orkiestrator całej logiki sterowania.
 
 ### 2. Logika Biznesowa (`lib/CoreLogic/`)
 
 Warstwa zawierająca czystą logikę niezależną od sprzętu. Wszystkie klasy przyjmują zależności przez konstruktor (DI).
 
-- **`ImuLogic.h` / `ImuLogic.cpp`**
+#### Główny kontroler
 
-  - **Rola:** Przetwarzanie danych z czujnika IMU na kąty orientacji.
-  - **Zależność:** `IImuSensor` (interfejs sensora).
+- **`FlightController.h`**
+  - **Rola:** Główny orkiestrator systemu - łączy wszystkie komponenty.
+  - **Zależności:** `ImuLogic`, `SbusParser`, `ServoLogic`, `MotorOutput`, `IPidTimer`
   - **Kluczowe metody:**
-    - `update()`: Odczytuje dane z sensora i oblicza kąty (roll, pitch, yaw).
-    - `getPitch()`, `getRoll()`, `getYaw()`: Gettery dla obliczonych kątów.
+    - `init()`: Inicjalizacja wszystkich komponentów.
+    - `update(float dt)`: Główna pętla sterowania - failsafe, tryb, arming, PID, mixer, output.
+    - `setPidGains(...)`: Konfiguracja wzmocnień PID.
+  - **Zawiera wewnętrznie:** `ModeManager`, `ArmingManager`, `SafetyController`, `StabilizationController`, `TankMixer`, `CopterMixer`.
 
-- **`MotorLogic.h` / `MotorLogic.cpp`**
+#### Kontrola stanu
 
-  - **Rola:** Konwersja wartości throttle na pakiety DShot i wysyłka do silników.
-  - **Zależność:** `IMotorDriver` (interfejs sterownika silnika).
+- **`ModeManager.h` / `ModeManager.cpp`**
+
+  - **Rola:** Zarządzanie trybami pracy (TANK, COPTER, TRANSITION).
   - **Kluczowe metody:**
-    - `setThrottle(float throttle)`: Konwertuje throttle na pakiet DShot i wysyła.
-    - `createPacket(uint16_t value, bool telemetry)`: Funkcja pomocnicza tworzenia pakietu DShot.
+    - `update(float modeSwitch)`: Aktualizacja trybu na podstawie przełącznika RC.
+    - `isInTransition()`: Sprawdza czy trwa transformacja.
+  - **Obsługuje:** Płynną tranzycję serw przez określony czas (TRANSITION_TIME).
 
-- **`PidController.h` / `PidController.cpp`**
+- **`ArmingManager.h`**
 
-  - **Rola:** Implementacja algorytmu PID dla 4 osi (throttle, yaw, pitch, roll).
-  - **Zależność:** `IPidTimer` (interfejs timera dla obliczenia dt).
+  - **Rola:** Bezpieczne uzbrajanie/rozbrajanie silników.
   - **Kluczowe metody:**
-    - `compute(setpoints, measurements)`: Oblicza sygnały sterujące na podstawie błędów.
-  - **Struktura `PidGains`:** Przechowuje wzmocnienia `kp`, `ki`, `kd` dla każdej osi.
+    - `canArm(throttle, inTransition)`: Sprawdza warunki bezpieczeństwa.
+    - `arm()`, `disarm()`: Zmiana stanu uzbrojenia.
+  - **Warunki arming:** Niski throttle + nie w tranzycji.
+
+- **`SafetyController.h`**
+  - **Rola:** Obsługa sytuacji awaryjnych (failsafe).
+  - **Kluczowe metody:**
+    - `checkFailsafe(sbusFailsafe, sbusLostFrame)`: Wykrywanie utraty sygnału.
+    - `safetyLand(outputs, isTankMode)`: Stopniowe zmniejszanie throttle.
+
+#### Stabilizacja
+
+- **`StabilizationController.h`**
+
+  - **Rola:** Kaskadowy PID dla stabilizacji lotu.
+  - **Architektura:** Zewnętrzna pętla (angle→rate) + wewnętrzna pętla (rate→output).
+  - **Kluczowe metody:**
+    - `computeCopter(imu, throttle, yaw, pitch, roll, dt)`: Oblicza wyjścia dla trybu copter.
+    - `computeTank(imu, throttle, yaw, dt)`: Oblicza wyjścia dla trybu tank.
+    - `setInnerGains()`, `setOuterGains()`: Konfiguracja PID.
+
+- **`Pid.h` / `Pid.cpp`**
+  - **Rola:** Pojedynczy regulator PID z anti-windup.
+  - **Kluczowe metody:**
+    - `compute(measurement, setpoint, dt)`: Oblicza sygnał sterujący.
+    - `reset()`: Zeruje stan (integral, prevError).
+  - **Struktura `PidGains`:** kp, ki, kd, outMin, outMax.
+
+#### Miksery
+
+- **`IMixer.h`**
+
+  - **Rola:** Interfejs dla mikserów silników.
+  - **Struktura `MixerInput`:** throttle, yaw, pitch, roll.
+  - **Metoda:** `mix(input, outputs)` - przelicza na wartości silników.
+
+- **`TankMixer.h`**
+
+  - **Rola:** Mikser dla trybu czołgu (sterowanie różnicowe).
+  - **Formuły:** `tl = throttle + yaw`, `tr = throttle - yaw`.
+
+- **`CopterMixer.h`**
+  - **Rola:** Mikser dla trybu copter (konfiguracja X).
+  - **Formuły:** Standardowy mikser quadcopter z throttle ± pitch ± roll ± yaw.
+
+#### Wyjście silników
+
+- **`MotorOutput.h`**
+
+  - **Rola:** Warstwa wyjściowa - wysyła wartości do ESC przez DShot.
+  - **Kluczowe metody:**
+    - `send(MotorOutputs)`: Konwertuje i wysyła do wszystkich silników.
+    - `reset()`: Wysyła wartość 0 (zatrzymanie).
+    - `sendMinThrottle()`: Wysyła minimalny throttle (przy armowaniu).
+
+- **`MotorOutputs.h`**
+  - **Rola:** Struktura danych dla 6 silników.
+  - **Pola:** fl, fr, bl, br (copter) + tl, tr (tank).
+
+#### Wejścia
 
 - **`SbusParser.h` / `SbusParser.cpp`**
 
@@ -129,21 +225,32 @@ Warstwa zawierająca czystą logikę niezależną od sprzętu. Wszystkie klasy p
   - **Zależność:** `ISbusReader` (interfejs czytnika SBUS).
   - **Kluczowe metody:**
     - `parse()`: Odczytuje i parsuje kanały.
-    - `getThrottle()`, `getYaw()`, `getPitch()`, `getRoll()`: Wartości sterujące.
+    - `getThrottle()`, `getYaw()`, `getPitch()`, `getRoll()`: Wartości sterujące (znormalizowane).
     - `getArmStatus()`, `getMode()`: Status uzbrojenia i tryb pracy.
+    - `isFailsafe()`, `isLostFrame()`: Informacje o stanie połączenia.
+
+- **`ImuLogic.h` / `ImuLogic.cpp`**
+
+  - **Rola:** Przetwarzanie danych z czujnika IMU na kąty orientacji.
+  - **Zależność:** `IImuSensor`, `IPidTimer`.
+  - **Algorytm:** Filtr komplementarny łączący żyroskop (szybka reakcja) z akcelerometrem (brak dryfu).
+  - **Kluczowe metody:**
+    - `update()`: Odczytuje dane z sensora i oblicza kąty.
+    - `getPitch()`, `getRoll()`, `getYaw()`: Kąty orientacji (stopnie).
+    - `getPitchRate()`, `getRollRate()`, `getYawRate()`: Prędkości kątowe (°/s).
+    - `setAlpha(float)`: Ustawienie współczynnika filtra.
 
 - **`ServoLogic.h` / `ServoLogic.cpp`**
 
   - **Rola:** Sterowanie serwomechanizmami transformacji ramion.
-  - **Zależność:** `IServoDriver` (interfejs sterownika serw).
+  - **Zależność:** `IServoDriver`.
   - **Kluczowe metody:**
-    - `setAngle(float angle)`: Mapuje kąt na PWM i wysyła do serw.
+    - `setTankMode()`, `setCopterMode()`: Predefiniowane pozycje.
+    - `setAngle(int)`: Ustawienie dowolnego kąta (0-180).
 
 - **`Utils.h`**
   - **Rola:** Funkcje pomocnicze.
-  - **Co zawiera:**
-    - `constrain(value, min, max)`: Ogranicza wartość do zadanego zakresu.
-    - `map(value, fromLow, fromHigh, toLow, toHigh)`: Mapuje wartość z jednego zakresu na drugi.
+  - **Co zawiera:** `constrain()`, `map()`.
 
 ### 3. Interfejsy Sprzętowe (`lib/HardwareIf/`)
 
@@ -151,30 +258,23 @@ Abstrakcyjne interfejsy definiujące kontrakty dla sterowników sprzętowych. Um
 
 - **`IImuSensor.h`**
 
-  - **Rola:** Interfejs dla czujników IMU.
-  - **Struktura `ImuData`:** Przechowuje surowe dane (accelX/Y/Z, gyroX/Y/Z).
-  - **Metoda:** `readData(ImuData &data)` - odczyt surowych danych.
+  - **Struktura `ImuData`:** Surowe i przeliczone dane (accelX/Y/Z, gyroX/Y/Z + wersje float).
+  - **Metoda:** `readData(ImuData &data)` - odczyt danych z sensora.
 
 - **`IMotorDriver.h`**
 
-  - **Rola:** Interfejs dla sterowników silników (DShot).
   - **Metoda:** `sendPacket(uint16_t packet)` - wysłanie pakietu DShot.
 
 - **`IPidTimer.h`**
 
-  - **Rola:** Interfejs dla timera systemowego.
   - **Metoda:** `getMillis()` - pobranie aktualnego czasu w milisekundach.
 
 - **`ISbusReader.h`**
 
-  - **Rola:** Interfejs dla czytnika SBUS.
-  - **Metody:**
-    - `readChannels()` - odczyt kanałów z odbiornika.
-    - `getChannel(int ch)` - pobranie wartości konkretnego kanału.
+  - **Metody:** `read()`, `getChannel(int)`, `isFailsafe()`, `isLostFrame()`.
 
 - **`IServoDriver.h`**
-  - **Rola:** Interfejs dla sterownika serw.
-  - **Metoda:** `setPwm(uint8_t pin, uint16_t pwmValue)` - ustawienie PWM na pinie.
+  - **Metody:** `attach(pin)`, `detach(pin)`, `setAngle(pin, angle)`, `setMicroseconds(pin, us)`, `setPwm(pin, value)`.
 
 ### 4. Sterowniki Teensy (`lib/TeensyDrivers/`)
 
@@ -183,37 +283,37 @@ Implementacje interfejsów dla platformy Teensy. Zawierają kod specyficzny dla 
 - **`TeensyMpuSensor.h`**
 
   - **Implementuje:** `IImuSensor`
-  - **Rola:** Komunikacja z MPU6050 po I2C.
-  - **Działanie:** Odczytuje 14 bajtów rejestrów akcelerometru i żyroskopu.
+  - **Biblioteka:** Adafruit_MPU6050
+  - **Konfiguracja:** ±8g akcelerometr, ±500°/s żyroskop, 400kHz I2C.
 
 - **`TeensyDShotDriver.h`**
 
   - **Implementuje:** `IMotorDriver`
-  - **Rola:** Wysyłanie pakietów DShot przez UART.
-  - **Działanie:** Serializuje 16-bitowy pakiet na 2 bajty i wysyła przez `HardwareSerial`.
+  - **Protokół:** DShot600 przez HardwareSerial.
+  - **Działanie:** Serializuje 16-bitowy pakiet (11-bit throttle + 1-bit telemetry + 4-bit CRC).
 
 - **`TeensyPidTimer.h`**
 
   - **Implementuje:** `IPidTimer`
-  - **Rola:** Wrapper dla funkcji `millis()` Arduino.
+  - **Działanie:** Wrapper dla `millis()` Arduino.
 
 - **`TeensySbusReader.h`**
 
   - **Implementuje:** `ISbusReader`
-  - **Rola:** Odczyt SBUS przy użyciu biblioteki `bfs::SbusRx`.
+  - **Biblioteka:** bfs::SbusRx
   - **Działanie:** Dekoduje ramki SBUS na 16 kanałów.
 
 - **`TeensyServoDriver.h`**
   - **Implementuje:** `IServoDriver`
-  - **Rola:** Generowanie sygnału PWM dla serw.
-  - **Działanie:** Używa `analogWrite()` do ustawienia PWM.
+  - **Biblioteka:** Servo
+  - **Działanie:** Obsługuje 2 serwa transformacji (lewe i prawe).
 
 ### 5. Stary Kod (`old_code/`)
 
-Folder zawiera poprzednią implementację przed refaktoryzacją do architektury warstwowej:
+Folder zawiera poprzednią implementację przed refaktoryzacją - zachowany jako referencja:
 
 - `DShot.cpp` - stara implementacja protokołu DShot
-- `motor.cpp` - stara logika sterowania silnikami
+- `motor.cpp` - stara logika sterowania silnikami (monolityczna)
 - `mpu6050_sensor.cpp` - stara obsługa czujnika IMU
 - `old_main.cpp` - poprzedni punkt wejścia
 - `pids.cpp` - stara implementacja PID
@@ -225,3 +325,36 @@ Folder zawiera poprzednią implementację przed refaktoryzacją do architektury 
 - **`test/mocks/`** - Mocki bibliotek Arduino i sprzętowych dla testów jednostkowych.
 - **`test/test_DShot/`** - Testy dla protokołu DShot.
 - **`test/test_sbus/`** - Testy dla parsera SBUS
+
+## Konfiguracja
+
+Główne parametry do dostrojenia znajdują się w `src/config.h`:
+
+### Wzmocnienia PID
+
+```cpp
+// Wewnętrzna pętla (rate) - reakcja na prędkość kątową
+#define PID_YAW_RATE_KP 1.0f
+#define PID_PITCH_RATE_KP 1.0f
+#define PID_ROLL_RATE_KP 1.0f
+
+// Zewnętrzna pętla (angle) - konwersja błędu kąta na setpoint rate
+#define PID_PITCH_ANGLE_KP 2.0f
+#define PID_ROLL_ANGLE_KP 2.0f
+```
+
+### Filtr IMU
+
+```cpp
+// Współczynnik filtra komplementarnego (0.9-0.99)
+// Wyższy = szybsza reakcja, więcej żyroskopu
+// Niższy = stabilniejszy, więcej akcelerometru
+#define IMU_FILTER_ALPHA 0.98f
+```
+
+### Bezpieczeństwo
+
+```cpp
+#define SAFETY_LAND_REDUCTION_STEP 50.0f  // Redukcja throttle przy safety land
+#define TRANSITION_TIME 3000              // Czas transformacji [ms]
+```
