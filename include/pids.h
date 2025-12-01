@@ -1,4 +1,5 @@
 #pragma once
+#include "config.h"
 
 class Pids
 {
@@ -8,7 +9,7 @@ public:
 
     void reset();
 
-    float compute(float meas_, float sp_, float dt_);
+    float compute(float meas_, float sp_, float dt_, vehicle_mode_t mode);
 
     void setGains(float Kp_, float Ki_, float Kd_);
     void setOutputLimits(float out_min_, float out_max_);

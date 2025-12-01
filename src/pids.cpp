@@ -23,8 +23,12 @@ void Pids::init()
     reset();
 }
 
-float Pids::compute(float meas_, float sp_, float dt_)
+float Pids::compute(float meas_, float sp_, float dt_, vehicle_mode_t mode)
 {
+    if (mode == MODE_TANK)
+    {
+        return meas_;
+    }
     float err = sp_ - meas_;
     integral += err * dt_;
 

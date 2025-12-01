@@ -135,9 +135,9 @@ void Motor_controller::update_motors(
         pitch_sp = 0.0f;
         roll_sp = 0.0f;
 
-        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
-        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
-        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
+        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_, current_mode);
+        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_, current_mode);
+        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_, current_mode);
 
         // tl = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         // tr = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl - pid_pitch_ctrl;
@@ -155,12 +155,11 @@ void Motor_controller::update_motors(
         pitch_sp = sbus_reader_ref.get_pitch() * PITCH_COEF;
         roll_sp = sbus_reader_ref.get_roll() * ROLL_COEF;
 
-        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_);
-        roll_desired = pids_outer.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_);
-        pitch_desired = pids_outer.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_);
-        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll_rate(), roll_desired, dt_);
-        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch_rate(), pitch_desired, dt_);
-
+        pid_yaw_ctrl = pids_inner.yaw.compute(mpu_sensor_.get_yaw_rate(), yaw_sp, dt_, current_mode);
+        roll_desired = pids_outer.roll.compute(mpu_sensor_.get_roll(), roll_sp, dt_, current_mode);
+        pitch_desired = pids_outer.pitch.compute(mpu_sensor_.get_pitch(), pitch_sp, dt_, current_mode);
+        pid_roll_ctrl = pids_inner.roll.compute(mpu_sensor_.get_roll_rate(), roll_desired, dt_, current_mode);
+        pid_pitch_ctrl = pids_inner.pitch.compute(mpu_sensor_.get_pitch_rate(), pitch_desired, dt_, current_mode);
         fr = throttle_sp - pid_yaw_ctrl + pid_roll_ctrl + pid_pitch_ctrl;
         fl = throttle_sp + pid_yaw_ctrl - pid_roll_ctrl + pid_pitch_ctrl;
         br = throttle_sp + pid_yaw_ctrl + pid_roll_ctrl - pid_pitch_ctrl;
