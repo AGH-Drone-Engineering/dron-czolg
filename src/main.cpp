@@ -27,35 +27,29 @@ void loop()
             return;
         }
     }
-    first_lost_frame = millis();
-    if (millis() - first_lost_frame < 500)
+    else
     {
-        printf("throttle: %.2f, arm: %.2f, mode: %.2f\n",
-               SBUS_Reader.get_throttle(),
-               SBUS_Reader.get_arm_status(),
-               SBUS_Reader.get_mode());
+        first_lost_frame = 0;
+    }
 
-        // Arm/Disarm
-        if (SBUS_Reader.get_arm_status() > 0.5f && !Motor_Controller.is_armed())
-        {
-            Motor_Controller.arm_motors();
-        }
-        else if (SBUS_Reader.get_arm_status() < 0.5f && Motor_Controller.is_armed())
-        {
-            Motor_Controller.disarm_motors();
-        }
+    // Arm/Disarm
+    if (SBUS_Reader.get_arm_status() > 0.5f && !Motor_Controller.is_armed())
+    {
+        Motor_Controller.arm_motors();
+    }
+    else if (SBUS_Reader.get_arm_status() < 0.5f && Motor_Controller.is_armed())
+    {
+        Motor_Controller.disarm_motors();
     }
 
     // if (Motor_Controller.get_current_mode() != SBUS_Reader.get_mode())
     // {
     //     Motor_Controller.update_mode(SBUS_Reader.get_mode());
-    //     printf("changing mode");
+    //     printf("changing mode\n");
     //     delay(3000);
     // }
 
-    // // Sterowanie tank
-    // Motor_Controller.update_motors();
-
-    Motor_Controller.run_one_motor_test("TR", SBUS_Reader.get_throttle());
-    // Motor_Controller.run_one_motor_test("TL", SBUS_Reader.get_throttle());
+    // Sterowanie tank
+    Motor_Controller.update_motors();
+    Motor_Controller.set_vehicle_PWM();
 }

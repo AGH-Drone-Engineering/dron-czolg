@@ -2,12 +2,12 @@
 
 Motor_controller::Motor_controller(Sbus_reader &sbus_reader_)
     : sbus_reader_ref(sbus_reader_),
-      motor_tl(MOTOR_PORT_TL, DShotType::DShot300),
-      motor_tr(MOTOR_PORT_TR, DShotType::DShot300),
-      motor_drone_fl(MOTOR_PORT_DRONE_FL, DShotType::DShot600),
+      motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
+      motor_tr(MOTOR_PORT_TR, DShotType::DShot600),
+      motor_drone_fl(MOTOR_PORT_DRONE_FL_3, DShotType::DShot600),
       motor_drone_fr(MOTOR_PORT_DRONE_FR_1, DShotType::DShot600),
-      motor_drone_bl(MOTOR_PORT_DRONE_BL, DShotType::DShot600),
-      motor_drone_br(MOTOR_PORT_DRONE_BR, DShotType::DShot600),
+      motor_drone_bl(MOTOR_PORT_DRONE_BL_2, DShotType::DShot600),
+      motor_drone_br(MOTOR_PORT_DRONE_BR_4, DShotType::DShot600),
       servo_left(SERVO_LEFT_PIN),
       servo_right(SERVO_RIGHT_PIN),
       current_mode(MODE_TANK),
@@ -19,10 +19,10 @@ void Motor_controller::init()
 {
     sbus_reader_ref.init();
     reset_motors();
-    // servo_left.attach();
-    // servo_right.attach();
-    // servo_left.set_servo_tank_mode();
-    // servo_right.set_servo_tank_mode();
+    servo_left.attach();
+    servo_right.attach();
+    servo_left.set_servo_tank_mode();
+    servo_right.set_servo_tank_mode();
     current_mode = MODE_TANK;
 }
 
@@ -56,27 +56,28 @@ void Motor_controller::update_mode(float change_to_)
 
 void Motor_controller::update_motors()
 {
-    // Proste sterowanie tank (różnicowe)
+    // Proste sterowanie tank (różnicowe) na surowych wartościach SBUS
     float throttle = sbus_reader_ref.get_throttle(); // SBUS_MIN do SBUS_MAX
     float yaw = sbus_reader_ref.get_yaw();           // SBUS_MIN do SBUS_MAX
 
-    // Normalizuj do zakresu 0-1 i -1 do 1
-    float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN); // 0 do 1
-    float yaw_norm = (yaw - SBUS_CENTER) / (SBUS_CENTER - SBUS_MIN);     // -1 do 1
+    // Oblicz left i right na podstawie surowych wartości (bez wcześniejszej normalizacji)
+    float left = throttle + (yaw - SBUS_CENTER) * 0.5f;
+    float right = throttle - (yaw - SBUS_CENTER) * 0.5f;
 
-    // Sterowanie różnicowe
-    float left = throttle_norm + yaw_norm * 0.5f;
-    float right = throttle_norm - yaw_norm * 0.5f;
+    // Ogranicz do zakresu SBUS_MIN - SBUS_MAX
+    left = constrain(left, SBUS_MIN, SBUS_MAX);
+    right = constrain(right, SBUS_MIN, SBUS_MAX);
 
-    // Ogranicz do 0-1
-    left = constrain(left, 0.0f, 1.0f);
-    right = constrain(right, 0.0f, 1.0f);
+    // Znormalizuj do 0-1
+    float left_norm = (left - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
+    float right_norm = (right - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
 
     // Mapuj na zakres DShot
-    tl = left * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
-    tr = right * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
+    tl = left_norm * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
+    tr = right_norm * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
 
     // Jeśli throttle bardzo niski, wyłącz motory
+    float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
     if (throttle_norm < 0.05f)
     {
         tl = 0;
@@ -86,13 +87,15 @@ void Motor_controller::update_motors()
 
 void Motor_controller::set_vehicle_PWM()
 {
-    if (!armed)
-    {
-        reset_motors();
-        return;
-    }
     motor_tl.sendThrottle(tl);
     motor_tr.sendThrottle(tr);
+    if (millis() % 200 == 0)
+    {
+        printf("throttle left: %.2f, throttle right: %.2f, arm: %.2f, mode: %.2f\n",
+               tl, tr,
+               is_armed() ? 1.0f : 0.0f,
+               sbus_reader_ref.get_mode());
+    }
 }
 
 void Motor_controller::arm_motors()

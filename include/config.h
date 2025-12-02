@@ -13,17 +13,14 @@
 #define SBUS_INPUT Serial5
 
 // porty motorów drone
-#define MOTOR_PORT_DRONE_FL &Serial1   // => FR_1 (serial1)
-#define MOTOR_PORT_DRONE_FR_1 &Serial2 // => BR_4 zam
-#define MOTOR_PORT_DRONE_BL &Serial7   // => BL_2
-#define MOTOR_PORT_DRONE_BR &Serial6   // FL_3 zam
+#define MOTOR_PORT_DRONE_FR_1 &Serial1
+#define MOTOR_PORT_DRONE_FL_3 &Serial6
+#define MOTOR_PORT_DRONE_BR_4 &Serial2
+#define MOTOR_PORT_DRONE_BL_2 &Serial7
 
 // Porty motorów tank
-#define MOTOR_PORT_TL &Serial3
-#define MOTOR_PORT_TR &Serial4
-
-#define MOTOR_PWM_TL 14
-#define MOTOR_PWM_TR 17
+#define MOTOR_PORT_TL &Serial4
+#define MOTOR_PORT_TR &Serial3
 
 // SBUS
 #define SBUS_MIN 175.0f
