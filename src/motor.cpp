@@ -115,7 +115,7 @@ bool Motor_controller::can_arm()
 {
     float throttle = sbus_reader_ref.get_throttle();
     float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
-    return throttle_norm < 0.1f; // Można uzbrojić tylko przy niskim throttle
+    return throttle_norm < 0.1f; // Można uzbroić tylko przy niskim throttle
 }
 
 void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
