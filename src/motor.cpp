@@ -83,19 +83,50 @@ void Motor_controller::update_motors()
         tl = 0;
         tr = 0;
     }
+    // tl = sbus_reader_ref.get_throttle();
+    // tr = sbus_reader_ref.get_throttle();
 }
 
-void Motor_controller::set_vehicle_PWM()
+void Motor_controller::set_vehicle_PWM(int16_t throttle, int16_t yaw)
 {
+
+
+      // Oblicz left i right na podstawie surowych wartości (bez wcześniejszej normalizacji)
+    float left = throttle + (yaw - SBUS_CENTER) * 0.5f;
+    float right = throttle - (yaw - SBUS_CENTER) * 0.5f;
+
+    // Ogranicz do zakresu SBUS_MIN - SBUS_MAX
+    left = constrain(left, SBUS_MIN, SBUS_MAX);
+    right = constrain(right, SBUS_MIN, SBUS_MAX);
+
+    // Znormalizuj do 0-1
+    float left_norm = (left - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
+    float right_norm = (right - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
+
+    // Mapuj na zakres DShot
+    tl = left_norm * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
+    tr = right_norm * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
+
+    // Jeśli throttle bardzo niski, wyłącz motory
+    float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
+    if (throttle_norm < 0.05f)
+    {
+        tl = 0;
+        tr = 0;
+    }
+    motor_drone_fl.sendThrottle(0);
+    motor_drone_bl.sendThrottle(0);
+    motor_drone_fr.sendThrottle(0);
+    motor_drone_br.sendThrottle(0);
     motor_tl.sendThrottle(tl);
     motor_tr.sendThrottle(tr);
-    if (millis() % 200 == 0)
-    {
-        printf("throttle left: %.2f, throttle right: %.2f, arm: %.2f, mode: %.2f\n",
-               tl, tr,
-               is_armed() ? 1.0f : 0.0f,
-               sbus_reader_ref.get_mode());
-    }
+    // if (millis() % 200 == 0)
+    // {
+    //     printf("throttle left: %d, throttle right: %d, arm: %.2f, mode: %.2f\n",
+    //            throttle, throttle,
+    //            is_armed() ? 1.0f : 0.0f,
+    //            sbus_reader_ref.get_mode());
+    // }
 }
 
 void Motor_controller::arm_motors()

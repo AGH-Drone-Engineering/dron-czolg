@@ -16,40 +16,64 @@ void setup()
 
 void loop()
 {
-    // Czytaj SBUS
     if (SBUS_Reader.Read_Sbus() != 0.0)
     {
+        // if (millis() - first_lost_frame > 1000)
+        // {
 
-        if (millis() - first_lost_frame > 1000)
-        {
-            printf("lost signal\n");
-            first_lost_frame = millis();
-            return;
-        }
-    }
-    else
-    {
-        first_lost_frame = 0;
+        //     printf("lost signal\n");
+
+        //     first_lost_frame = millis();
+
+        //     return;
+        // }
     }
 
-    // Arm/Disarm
-    if (SBUS_Reader.get_arm_status() > 0.5f && !Motor_Controller.is_armed())
-    {
-        Motor_Controller.arm_motors();
-    }
-    else if (SBUS_Reader.get_arm_status() < 0.5f && Motor_Controller.is_armed())
-    {
-        Motor_Controller.disarm_motors();
-    }
+    // first_lost_frame = millis();
 
-    // if (Motor_Controller.get_current_mode() != SBUS_Reader.get_mode())
+    // if (millis() - first_lost_frame < 500)
+
     // {
-    //     Motor_Controller.update_mode(SBUS_Reader.get_mode());
-    //     printf("changing mode\n");
-    //     delay(3000);
+
+    //     // printf("throttle: %.2f, arm: %.2f, mode: %.2f\n",
+
+    //     //        SBUS_Reader.get_throttle(),
+
+    //     //        SBUS_Reader.get_arm_status(),
+
+    //     //        SBUS_Reader.get_mode());
+
+    //     // // Arm/Disarm
+
+    //     if (SBUS_Reader.get_arm_status() > 0.5f && !Motor_Controller.is_armed())
+
+    //     {
+
+    //         Motor_Controller.arm_motors();
+    //     }
+
+    //     else if (SBUS_Reader.get_arm_status() < 0.5f && Motor_Controller.is_armed())
+
+    //     {
+
+    //         Motor_Controller.disarm_motors();
+    //     }
     // }
 
-    // Sterowanie tank
-    Motor_Controller.update_motors();
-    Motor_Controller.set_vehicle_PWM();
+    if (Motor_Controller.get_current_mode() != SBUS_Reader.get_mode())
+    {
+        Motor_Controller.update_mode(SBUS_Reader.get_mode());
+        printf("changing mode\n");
+        delay(3000);
+    }
+
+    // // Sterowanie tank
+    // if (Motor_Controller.get_current_mode() == MODE_TANK)
+    // {
+    //Motor_Controller.update_motors();
+    Motor_Controller.set_vehicle_PWM(SBUS_Reader.get_throttle(), SBUS_Reader.get_yaw());
+
+    //}
+
+    // Motor_Controller.run_one_motor_test("TL", SBUS_Reader.get_throttle());
 }

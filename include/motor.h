@@ -16,7 +16,7 @@ public:
     void reset_motors();
     void update_mode(float change_to_);
     void update_motors();
-    void set_vehicle_PWM();
+    void set_vehicle_PWM(int16_t throttle, int16_t yaw);
     void arm_motors();
     void disarm_motors();
     bool is_armed() { return armed; }
@@ -37,5 +37,5 @@ private:
     ServoController servo_left;
     ServoController servo_right;
     vehicle_mode_t current_mode;
-    float tl, tr; // tank-left, tank-right
+    volatile int16_t tl, tr; // tank-left, tank-right
 };

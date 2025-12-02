@@ -21,8 +21,8 @@ class DShot
 {
 private:
     HardwareSerial *uart;
-    void sendPackage(uint16_t package);
-    int16_t convertThrottle(float throttle);
+    void sendPackage(int16_t package);
+    int16_t convertThrottle(int16_t  throttle);
 
 public:
     DShot(HardwareSerial *uart, DShotType type);

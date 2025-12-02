@@ -20,7 +20,7 @@ static inline uint16_t createPackage(uint16_t value, bool telemetry)
  *
  * @param package Package created with createPackage()
  */
-void DShot::sendPackage(uint16_t package)
+void DShot::sendPackage(int16_t package)
 {
     uint8_t buffer[16];
 
@@ -77,16 +77,29 @@ DShot::DShot(HardwareSerial *uart, DShotType type) : uart(uart)
  */
 void DShot::sendThrottle(int16_t throttle, bool telemetry)
 {
+    //  if (millis() % 200 == 0)
+    //     {
+    //         printf("throttllllllllllllle: %d\n",
+    //                throttle);
+    //     }
     throttle = convertThrottle(throttle);
+
+    //      if (millis() % 200 == 0)
+    //     {
+    //         printf("throttle: %d\n",
+    //                throttle);
+    //     }
+
     sendPackage(createPackage(throttle, telemetry));
 }
 
-int16_t DShot::convertThrottle(float throttle)
+int16_t DShot::convertThrottle(int16_t throttle)
 {
     if (throttle < 260)
         return 0;
     throttle = map(throttle, SBUS_MIN, SBUS_MAX, DSHOT_THROTTLE_ACTIVE_MIN, DSHOT_THROTTLE_ACTIVE_MAX);
-    return static_cast<uint16_t>(roundf(throttle));
+    // return static_cast<uint16_t>(roundf(throttle));
+    return throttle;
 }
 
 /**

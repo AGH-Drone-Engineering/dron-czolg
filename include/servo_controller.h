@@ -9,7 +9,7 @@ private:
     Servo servo_motor;
     int servo_pin;
     constexpr static int DRONE_ANGLE = 25;
-    constexpr static int TANK_ANGLE = 185;
+    constexpr static int TANK_ANGLE = 250;
 
 public:
     // Constructor: Initializes the controller with a specific pin.
