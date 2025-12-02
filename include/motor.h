@@ -36,6 +36,7 @@ private:
     bool armed = false;
     ServoController servo_left;
     ServoController servo_right;
-    float tl, tr; // tank-left, tank-right
     vehicle_mode_t current_mode;
+    float tl, tr; // tank-left, tank-right
+    void set_tank_motor_pwm(std::string motor_name, int pwm_value);
 };

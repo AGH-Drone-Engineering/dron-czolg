@@ -2,10 +2,10 @@
 
 Motor_controller::Motor_controller(Sbus_reader &sbus_reader_)
     : sbus_reader_ref(sbus_reader_),
-      motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
-      motor_tr(MOTOR_PORT_TR, DShotType::DShot600),
+      motor_tl(MOTOR_PORT_TL, DShotType::DShot300),
+      motor_tr(MOTOR_PORT_TR, DShotType::DShot300),
       motor_drone_fl(MOTOR_PORT_DRONE_FL, DShotType::DShot600),
-      motor_drone_fr(MOTOR_PORT_DRONE_FR, DShotType::DShot600),
+      motor_drone_fr(MOTOR_PORT_DRONE_FR_1, DShotType::DShot600),
       motor_drone_bl(MOTOR_PORT_DRONE_BL, DShotType::DShot600),
       motor_drone_br(MOTOR_PORT_DRONE_BR, DShotType::DShot600),
       servo_left(SERVO_LEFT_PIN),
@@ -19,10 +19,10 @@ void Motor_controller::init()
 {
     sbus_reader_ref.init();
     reset_motors();
-    servo_left.attach();
-    servo_right.attach();
-    servo_left.set_servo_tank_mode();
-    servo_right.set_servo_tank_mode();
+    // servo_left.attach();
+    // servo_right.attach();
+    // servo_left.set_servo_tank_mode();
+    // servo_right.set_servo_tank_mode();
     current_mode = MODE_TANK;
 }
 
@@ -138,7 +138,7 @@ void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
         motor_tl.sendThrottle(0);
         motor_tr.sendThrottle(0);
     }
-    else if (motor_name == "FR")
+    else if (motor_name == "FR_1")
     {
 
         motor_drone_fl.sendThrottle(0);
@@ -165,7 +165,7 @@ void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
         motor_drone_fr.sendThrottle(0);
         motor_drone_br.sendThrottle(0);
         motor_tl.sendThrottle(throttle);
-        motor_tr.sendThrottle(0);
+        // motor_tr.sendThrottle(0);
     }
     else if (motor_name == "TR")
     {
@@ -173,7 +173,27 @@ void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
         motor_drone_bl.sendThrottle(0);
         motor_drone_fr.sendThrottle(0);
         motor_drone_br.sendThrottle(0);
-        motor_tl.sendThrottle(0);
+        // motor_tl.sendThrottle(0);
         motor_tr.sendThrottle(throttle);
+    }
+}
+
+void Motor_controller::set_tank_motor_pwm(std::string motor_name, int pwm_value)
+{
+    if (pwm_value < 260)
+        pwm_value = SBUS_MIN;
+    pwm_value = map(pwm_value, SBUS_MIN, SBUS_MAX, 0, 255);
+
+    if (motor_name == "TL")
+    {
+        analogWrite(MOTOR_PWM_TL, pwm_value);
+    }
+    else if (motor_name == "TR")
+    {
+        analogWrite(MOTOR_PWM_TR, pwm_value);
+    }
+    else
+    {
+        Serial.println("Error: Unknown motor name for PWM control");
     }
 }

@@ -8,6 +8,21 @@ Sbus_reader::Sbus_reader()
 void Sbus_reader::init()
 {
     sbus_rx.Begin();
+    Serial.println("Sbus_reader: Begin called");
+    uint32_t start = millis();
+    bool ok = false;
+    while (millis() - start < 200)
+    {
+        if (sbus_rx.Read())
+        {
+            ok = true;
+            break;
+        }
+    }
+    if (ok)
+        Serial.println("Sbus_reader: init OK");
+    else
+        Serial.println("Sbus_reader: init FAILED");
 }
 
 float Sbus_reader::NormalizeChannel(int16_t channel)

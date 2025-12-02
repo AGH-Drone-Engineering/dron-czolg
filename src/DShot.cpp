@@ -83,6 +83,8 @@ void DShot::sendThrottle(int16_t throttle, bool telemetry)
 
 int16_t DShot::convertThrottle(float throttle)
 {
+    if (throttle < 260)
+        return 0;
     throttle = map(throttle, SBUS_MIN, SBUS_MAX, DSHOT_THROTTLE_ACTIVE_MIN, DSHOT_THROTTLE_ACTIVE_MAX);
     return static_cast<uint16_t>(roundf(throttle));
 }
