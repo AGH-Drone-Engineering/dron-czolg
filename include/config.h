@@ -13,7 +13,7 @@
 #define SBUS_INPUT Serial5
 
 // porty motorów drone
-#define MOTOR_PORT_DRONE_FL &Serial1   // => FR_1
+#define MOTOR_PORT_DRONE_FL &Serial1   // => FR_1 (serial1)
 #define MOTOR_PORT_DRONE_FR_1 &Serial2 // => BR_4 zam
 #define MOTOR_PORT_DRONE_BL &Serial7   // => BL_2
 #define MOTOR_PORT_DRONE_BR &Serial6   // FL_3 zam

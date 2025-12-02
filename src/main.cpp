@@ -44,17 +44,18 @@ void loop()
         {
             Motor_Controller.disarm_motors();
         }
-
-        // if (Motor_Controller.get_current_mode() != SBUS_Reader.get_mode())
-        // {
-        //     Motor_Controller.update_mode(SBUS_Reader.get_mode());
-        //     printf("changing mode");
-        //     delay(3000);
-        // }
-
-        // // Sterowanie tank
-        // Motor_Controller.update_motors();
-
-        Motor_Controller.run_one_motor_test("TR", SBUS_Reader.get_throttle());
     }
+
+    // if (Motor_Controller.get_current_mode() != SBUS_Reader.get_mode())
+    // {
+    //     Motor_Controller.update_mode(SBUS_Reader.get_mode());
+    //     printf("changing mode");
+    //     delay(3000);
+    // }
+
+    // // Sterowanie tank
+    // Motor_Controller.update_motors();
+
+    Motor_Controller.run_one_motor_test("TR", SBUS_Reader.get_throttle());
+    // Motor_Controller.run_one_motor_test("TL", SBUS_Reader.get_throttle());
 }

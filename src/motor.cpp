@@ -165,7 +165,7 @@ void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
         motor_drone_fr.sendThrottle(0);
         motor_drone_br.sendThrottle(0);
         motor_tl.sendThrottle(throttle);
-        // motor_tr.sendThrottle(0);
+        motor_tr.sendThrottle(0);
     }
     else if (motor_name == "TR")
     {
@@ -173,27 +173,7 @@ void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
         motor_drone_bl.sendThrottle(0);
         motor_drone_fr.sendThrottle(0);
         motor_drone_br.sendThrottle(0);
-        // motor_tl.sendThrottle(0);
+        motor_tl.sendThrottle(0);
         motor_tr.sendThrottle(throttle);
-    }
-}
-
-void Motor_controller::set_tank_motor_pwm(std::string motor_name, int pwm_value)
-{
-    if (pwm_value < 260)
-        pwm_value = SBUS_MIN;
-    pwm_value = map(pwm_value, SBUS_MIN, SBUS_MAX, 0, 255);
-
-    if (motor_name == "TL")
-    {
-        analogWrite(MOTOR_PWM_TL, pwm_value);
-    }
-    else if (motor_name == "TR")
-    {
-        analogWrite(MOTOR_PWM_TR, pwm_value);
-    }
-    else
-    {
-        Serial.println("Error: Unknown motor name for PWM control");
     }
 }
