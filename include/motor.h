@@ -26,16 +26,16 @@ public:
     vehicle_mode_t get_current_mode() { return current_mode; };
 
 private:
-    ServoController servo_left;
-    ServoController servo_right;
-    float tl, tr; // tank-left, tank-right
+    Sbus_reader &sbus_reader_ref;
     DShot motor_tl;
     DShot motor_tr;
     DShot motor_drone_fl;
     DShot motor_drone_fr;
     DShot motor_drone_bl;
     DShot motor_drone_br;
-    vehicle_mode_t current_mode;
-    Sbus_reader &sbus_reader_ref;
     bool armed = false;
+    ServoController servo_left;
+    ServoController servo_right;
+    float tl, tr; // tank-left, tank-right
+    vehicle_mode_t current_mode;
 };
