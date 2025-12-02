@@ -1,11 +1,7 @@
 #include "sbus_reader.h"
 
 Sbus_reader::Sbus_reader()
-#ifdef NATIVE_TESTING
-    : sbus_rx()
-#else
     : sbus_rx(&SBUS_INPUT)
-#endif
 {
 }
 

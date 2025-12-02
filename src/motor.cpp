@@ -4,6 +4,10 @@ Motor_controller::Motor_controller(Sbus_reader &sbus_reader_)
     : sbus_reader_ref(sbus_reader_),
       motor_tl(MOTOR_PORT_TL, DShotType::DShot600),
       motor_tr(MOTOR_PORT_TR, DShotType::DShot600),
+      motor_drone_fl(MOTOR_PORT_DRONE_FL, DShotType::DShot600),
+      motor_drone_fr(MOTOR_PORT_DRONE_FR, DShotType::DShot600),
+      motor_drone_bl(MOTOR_PORT_DRONE_BL, DShotType::DShot600),
+      motor_drone_br(MOTOR_PORT_DRONE_BR, DShotType::DShot600),
       servo_left(SERVO_LEFT_PIN),
       servo_right(SERVO_RIGHT_PIN),
       current_mode(MODE_TANK),
@@ -33,7 +37,7 @@ void Motor_controller::reset_motors()
 void Motor_controller::update_mode(float change_to_)
 {
     vehicle_mode_t desired_mode = (change_to_ > 0.5f) ? MODE_COPTER : MODE_TANK;
-    
+
     if (desired_mode != current_mode)
     {
         current_mode = desired_mode;
@@ -53,25 +57,25 @@ void Motor_controller::update_mode(float change_to_)
 void Motor_controller::update_motors()
 {
     // Proste sterowanie tank (różnicowe)
-    float throttle = sbus_reader_ref.get_throttle();  // SBUS_MIN do SBUS_MAX
-    float yaw = sbus_reader_ref.get_yaw();            // SBUS_MIN do SBUS_MAX
-    
+    float throttle = sbus_reader_ref.get_throttle(); // SBUS_MIN do SBUS_MAX
+    float yaw = sbus_reader_ref.get_yaw();           // SBUS_MIN do SBUS_MAX
+
     // Normalizuj do zakresu 0-1 i -1 do 1
-    float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);  // 0 do 1
-    float yaw_norm = (yaw - SBUS_CENTER) / (SBUS_CENTER - SBUS_MIN);      // -1 do 1
-    
+    float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN); // 0 do 1
+    float yaw_norm = (yaw - SBUS_CENTER) / (SBUS_CENTER - SBUS_MIN);     // -1 do 1
+
     // Sterowanie różnicowe
     float left = throttle_norm + yaw_norm * 0.5f;
     float right = throttle_norm - yaw_norm * 0.5f;
-    
+
     // Ogranicz do 0-1
     left = constrain(left, 0.0f, 1.0f);
     right = constrain(right, 0.0f, 1.0f);
-    
+
     // Mapuj na zakres DShot
     tl = left * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
     tr = right * (DSHOT_THROTTLE_ACTIVE_MAX - DSHOT_THROTTLE_ACTIVE_MIN) + DSHOT_THROTTLE_ACTIVE_MIN;
-    
+
     // Jeśli throttle bardzo niski, wyłącz motory
     if (throttle_norm < 0.05f)
     {
@@ -111,5 +115,65 @@ bool Motor_controller::can_arm()
 {
     float throttle = sbus_reader_ref.get_throttle();
     float throttle_norm = (throttle - SBUS_MIN) / (SBUS_MAX - SBUS_MIN);
-    return throttle_norm < 0.1f;  // Można uzbrojić tylko przy niskim throttle
+    return throttle_norm < 0.1f; // Można uzbrojić tylko przy niskim throttle
+}
+
+void Motor_controller::run_one_motor_test(string motor_name, int16_t throttle)
+{
+    if (motor_name == "FL")
+    {
+        motor_drone_fl.sendThrottle(throttle);
+        motor_drone_bl.sendThrottle(0);
+        motor_drone_fr.sendThrottle(0);
+        motor_drone_br.sendThrottle(0);
+        motor_tl.sendThrottle(0);
+        motor_tr.sendThrottle(0);
+    }
+    else if (motor_name == "BL")
+    {
+        motor_drone_fl.sendThrottle(0);
+        motor_drone_bl.sendThrottle(throttle);
+        motor_drone_fr.sendThrottle(0);
+        motor_drone_br.sendThrottle(0);
+        motor_tl.sendThrottle(0);
+        motor_tr.sendThrottle(0);
+    }
+    else if (motor_name == "FR")
+    {
+
+        motor_drone_fl.sendThrottle(0);
+        motor_drone_bl.sendThrottle(0);
+        motor_drone_fr.sendThrottle(throttle);
+        motor_drone_br.sendThrottle(0);
+        motor_tl.sendThrottle(0);
+        motor_tr.sendThrottle(0);
+    }
+
+    else if (motor_name == "BR")
+    {
+        motor_drone_fl.sendThrottle(0);
+        motor_drone_bl.sendThrottle(0);
+        motor_drone_fr.sendThrottle(0);
+        motor_drone_br.sendThrottle(throttle);
+        motor_tl.sendThrottle(0);
+        motor_tr.sendThrottle(0);
+    }
+    else if (motor_name == "TL")
+    {
+        motor_drone_fl.sendThrottle(0);
+        motor_drone_bl.sendThrottle(0);
+        motor_drone_fr.sendThrottle(0);
+        motor_drone_br.sendThrottle(0);
+        motor_tl.sendThrottle(throttle);
+        motor_tr.sendThrottle(0);
+    }
+    else if (motor_name == "TR")
+    {
+        motor_drone_fl.sendThrottle(0);
+        motor_drone_bl.sendThrottle(0);
+        motor_drone_fr.sendThrottle(0);
+        motor_drone_br.sendThrottle(0);
+        motor_tl.sendThrottle(0);
+        motor_tr.sendThrottle(throttle);
+    }
 }

@@ -9,20 +9,18 @@
 #define SERVO_RIGHT_PIN 23
 
 // SBUS
-#ifdef NATIVE_TESTING
-#define SBUS_INPUT dummy
-#else
+
 #define SBUS_INPUT Serial5
-#endif
+
+// porty motorów drone
+#define MOTOR_PORT_DRONE_FL &Serial1
+#define MOTOR_PORT_DRONE_FR &Serial2
+#define MOTOR_PORT_DRONE_BL &Serial3
+#define MOTOR_PORT_DRONE_BR &Serial4
 
 // Porty motorów tank
-#ifdef NATIVE_TESTING
-#define MOTOR_PORT_TL nullptr
-#define MOTOR_PORT_TR nullptr
-#else
 #define MOTOR_PORT_TL &Serial5
 #define MOTOR_PORT_TR &Serial6
-#endif
 
 // SBUS
 #define SBUS_MIN 175.0f
